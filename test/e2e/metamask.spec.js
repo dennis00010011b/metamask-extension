@@ -342,7 +342,7 @@ describe('Metamask popup page', async function () {
 
     it('doesn\'t remove imported account with \'No\' button', async function () {
       const NoButton = await driver.findElement(screens.deleteImportedAccount.buttons.no)
-      NoButton.click()
+      await NoButton.click()
       await delay(500)
       const settingsTitle = await driver.findElement(screens.settings.title)
       assert.equal(await settingsTitle.getText(), 'Settings')
@@ -361,7 +361,7 @@ describe('Metamask popup page', async function () {
 
     it('removes imported account with \'Yes\' button', async function () {
       const YesButton = await driver.findElement(screens.deleteImportedAccount.buttons.yes)
-      YesButton.click()
+      await YesButton.click()
       await delay(500)
       const settingsTitle = await driver.findElement(screens.settings.title)
       assert.equal(await settingsTitle.getText(), 'Settings')
@@ -435,14 +435,14 @@ describe('Metamask popup page', async function () {
       const bySubmitButton = screens.confirmTransaction.buttons.submit
       const submitButton = await driver.wait(until.elementLocated(bySubmitButton))
 
-      submitButton.click()
+      await submitButton.click()
 
       await delay(1500)
     })
 
     it('finds the transaction in the transactions list', async function () {
-      const tranasactionAmount = await driver.findElement(screens.main.transactionList)
-      assert.equal(await tranasactionAmount.getText(), '10.0')
+      const transactionAmount = await driver.findElement(screens.main.transactionList)
+      assert.equal(await transactionAmount.getText(), '10.0')
     })
   })
 
