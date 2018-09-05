@@ -187,7 +187,7 @@ describe('Metamask popup page', async function () {
         await delay(700)
         button = await waitUntilShowUp(screens.settings.buttons.changePassword)
         console.log(button)
-        await button.click()
+
         await delay(5000)
         await button.click()
         await button.click()
