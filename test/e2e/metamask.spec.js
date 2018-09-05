@@ -187,7 +187,7 @@ describe('Metamask popup page', async function () {
         await delay(700)
         await button.click()
         const title = await waitUntilShowUp(screens.changePassword.title)
-        console.log(title)
+        console.log('title'+ title)
         console.log('text'+await title.getText())
         assert.equal(await title.getText(), screens.changePassword.titleText, '"Change password" screen contains incorrect title')
       })
