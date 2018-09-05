@@ -186,6 +186,17 @@ describe('Metamask popup page', async function () {
         await driver.executeScript('arguments[0].scrollIntoView();', button)
         await delay(700)
         await button.click()
+        await delay(5000)
+        console.log(await waitUntilShowUp(screens.changePassword.title))
+        console.log(await waitUntilShowUp(screens.changePassword.fieldConfirmNewPassword))
+        console.log(await waitUntilShowUp(screens.changePassword.fieldNewPassword))
+        console.log(await waitUntilShowUp(screens.changePassword.fieldOldPassword))
+        console.log(await waitUntilShowUp(screens.changePassword.buttonNo))
+        console.log(await waitUntilShowUp(screens.changePassword.buttonYes))
+        console.log(await waitUntilShowUp(screens.changePassword.arrowLeft))
+
+
+
         const title = await waitUntilShowUp(screens.changePassword.title)
         console.log('title'+ title)
         //console.log('text'+await title.getText())
