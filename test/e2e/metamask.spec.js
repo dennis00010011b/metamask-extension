@@ -85,7 +85,7 @@ describe('Metamask popup page', async function () {
     })
 
     it('allows the button to be clicked when scrolled to the bottom of TOU', async () => {
-      const button = await driver.findElement(screens.TOU.button)
+      const button = await waitUntilShowUp(screens.TOU.button)
       await button.click()
     })
 
