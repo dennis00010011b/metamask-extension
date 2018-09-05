@@ -9,9 +9,6 @@ workflows:
       - prep-build:
           requires:
             - prep-deps-npm
-      - prep-scss:
-          requires:
-            - prep-deps-npm
 
       - test-e2e-chrome:
           requires:

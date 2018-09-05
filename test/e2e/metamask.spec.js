@@ -55,15 +55,10 @@ describe('Metamask popup page', async function () {
 
   describe('Setup', async function () {
 
-    it('switches to Chrome extensions list', async function () {
+    it('switches to extensions list', async function () {
       await delay(300)
       const windowHandles = await driver.getAllWindowHandles()
       await driver.switchTo().window(windowHandles[0])
-    })
-
-    it('sets provider type to localhost', async function () {
-      await delay(300)
-      await setProviderType('localhost')
     })
   })
 
@@ -114,6 +109,11 @@ describe('Metamask popup page', async function () {
       assert.equal(await continueAfterSeedPhrase.getText(), screens.seedPhrase.textButtonIveCopied)
       await continueAfterSeedPhrase.click()
       await delay(300)
+    })
+
+    it('sets provider type to localhost', async function () {
+      await delay(300)
+      await setProvider(NETWORKS.LOCALHOST)
     })
 
     it('adds a second account', async function () {
@@ -181,8 +181,10 @@ describe('Metamask popup page', async function () {
         assert.equal(await buttons[0].isEnabled(), true, 'Button "Change password" is disabled')
       })
 
-      it('screen contains correct title', async () => {
-        const button = await waitUntilShowUp(screens.settings.buttons.changePassword)
+      it('screen has correct title', async () => {
+        const button = await driver.findElement(screens.settings.buttons.changePassword)
+        await driver.executeScript('arguments[0].scrollIntoView();', button)
+        await delay(700)
         await button.click()
         const title = await waitUntilShowUp(screens.changePassword.title)
         assert.equal(await title.getText(), screens.changePassword.titleText, '"Change password" screen contains incorrect title')
@@ -806,7 +808,7 @@ describe('Metamask popup page', async function () {
   })
 
   async function setProviderType (type) {
-    await driver.executeScript('window.metamask.setProviderType(arguments[0])', type)
+    await driver.executeScript('window.metamask.setProviderType(arguments[0]);', type)
   }
 
   async function setProvider (network) {
