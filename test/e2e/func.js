@@ -70,4 +70,6 @@ async function clearField (field, number) {
   for (let i = 0; i < number; i++) {
     await field.sendKeys(Key.BACK_SPACE)
   }
+
+
 }

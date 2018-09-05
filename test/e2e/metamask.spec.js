@@ -182,11 +182,14 @@ describe('Metamask popup page', async function () {
       })
 
       it('screen has correct title', async () => {
-        const button = await driver.findElement(screens.settings.buttons.changePassword)
+        let button = await driver.findElement(screens.settings.buttons.changePassword)
         await driver.executeScript('arguments[0].scrollIntoView();', button)
         await delay(700)
+        button = await waitUntilShowUp(screens.settings.buttons.changePassword)
+        console.log(button)
         await button.click()
         await delay(5000)
+        await takeScreenshoot('screenChangePass')
         console.log(await waitUntilShowUp(screens.changePassword.title))
         console.log(await waitUntilShowUp(screens.changePassword.fieldConfirmNewPassword))
         console.log(await waitUntilShowUp(screens.changePassword.fieldNewPassword))
@@ -199,8 +202,8 @@ describe('Metamask popup page', async function () {
 
         const title = await waitUntilShowUp(screens.changePassword.title)
         console.log('title'+ title)
-        //console.log('text'+await title.getText())
-       // assert.equal(await title.getText(), screens.changePassword.titleText, '"Change password" screen contains incorrect title')
+        console.log('text'+await title.getText())
+       assert.equal(await title.getText(), screens.changePassword.titleText, '"Change password" screen contains incorrect title')
       })
 
       it('screen contains correct label', async () => {
@@ -857,7 +860,12 @@ describe('Metamask popup page', async function () {
     }
     await driver.executeScript("document.getElementsByClassName('dropdown-menu-item')[" + counter + '].click();')
   }
+  async function takeScreenshoot(name) {
+    let res = await driver.takeScreenshot();
+    let buf = new Buffer(res, 'base64');
+    await fs.writeFileSync('./test-artifacts/firefox' +name + '.png', buf);
 
+  }
   async function waitUntilDisappear (by, Twait) {
     if (Twait === undefined) Twait = 10
     do {
@@ -958,4 +966,5 @@ describe('Metamask popup page', async function () {
     const htmlSource = await driver.getPageSource()
     await pify(fs.writeFile)(`${filepathBase}-dom.html`, htmlSource)
   }
+
 })
