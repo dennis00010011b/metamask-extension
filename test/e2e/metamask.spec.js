@@ -189,7 +189,7 @@ describe('Metamask popup page', async function () {
         console.log(button)
         await button.click()
         await delay(5000)
-        await takeScreenshoot('screenChangePass')
+       // await takeScreenshoot('screenChangePass')
         console.log(await waitUntilShowUp(screens.changePassword.title))
         console.log(await waitUntilShowUp(screens.changePassword.fieldConfirmNewPassword))
         console.log(await waitUntilShowUp(screens.changePassword.fieldNewPassword))
