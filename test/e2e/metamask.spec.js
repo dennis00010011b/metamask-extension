@@ -481,16 +481,14 @@ describe('Metamask popup page', async function () {
     it('confirms transaction in MetaMask popup', async function () {
       const windowHandles = await driver.getAllWindowHandles()
       await driver.switchTo().window(windowHandles[windowHandles.length - 1])
-      const byMetamaskSubmit = By.css('#pending-tx-form > div.flex-row.flex-space-around.conf-buttons > input')
-      const metamaskSubmit = await driver.wait(until.elementLocated(byMetamaskSubmit))
-      await metamaskSubmit.click()
-      await delay(1000)
+      const buttonSubmit = await waitUntilShowUp(screens.confirmTransaction.buttons.submit)
+      await click(buttonSubmit)
     })
 
     it('switches back to Token Factory to grab the token contract address', async function () {
       const windowHandles = await driver.getAllWindowHandles()
       await driver.switchTo().window(windowHandles[0])
-      const tokenContactAddress = await driver.findElement(By.css('#main > div > div > div > div:nth-child(2) > span:nth-child(3)'))
+      const tokenContactAddress = await waitUntilShowUp(By.css('#main > div > div > div > div:nth-child(2) > span:nth-child(3)'))
       tokenAddress = await tokenContactAddress.getText()
       await delay(500)
     })
@@ -642,7 +640,7 @@ describe('Metamask popup page', async function () {
       const title = await waitUntilShowUp(screens.removeToken.title)
       assert.equal(await title.getText(), screens.removeToken.titleText, 'title is incorrect')
     })
-    it('clicking the button "Back" bring back to "Main" screen  ', async function () {
+    it.skip('clicking the button "Back" bring back to "Main" screen  ', async function () {
       const button = await waitUntilShowUp(screens.removeToken.buttons.back)
       await button.click()
       const token = await waitUntilShowUp(screens.main.tokens.balance)
@@ -650,9 +648,9 @@ describe('Metamask popup page', async function () {
     })
 
     it('button "No" bring back to "Main" screen', async function () {
-      const removeTokenButton = await waitUntilShowUp(screens.main.tokens.remove)
+    /*  const removeTokenButton = await waitUntilShowUp(screens.main.tokens.remove)
       assert.notEqual(removeTokenButton, false, 'button isn\'t displayed')
-      await removeTokenButton.click()
+      await removeTokenButton.click()*/
       const title = await waitUntilShowUp(screens.removeToken.title)
       assert.equal(await title.getText(), screens.removeToken.titleText, 'title is incorrect')
 
