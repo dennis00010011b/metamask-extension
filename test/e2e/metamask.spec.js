@@ -71,91 +71,96 @@ describe('Metamask popup page', async function () {
     })
 
     it('show terms of use', async () => {
-      const terms = await driver.findElement(screens.TOU.header).getText()
-      assert.equal(terms, 'Terms of Use', 'shows terms of use')
+      const terms = await waitUntilShowUp(screens.TOU.header)
+      assert.equal(await terms.getText(), 'Terms of Use', 'shows terms of use')
       delay(300)
     })
 
     it('checks if the TOU button is enabled', async () => {
-      const button = await driver.findElement(screens.TOU.button).isEnabled()
-      assert.equal(button, true, 'enabled continue button')
-      const element = await driver.findElement(By.linkText('Terms of Service'))
+      const button = await waitUntilShowUp(screens.TOU.button)
+      assert.equal(await button.isEnabled(), true, 'enabled continue button')
+      const element = await waitUntilShowUp(By.linkText('Terms of Service'))
       await driver.executeScript('arguments[0].scrollIntoView(true)', element)
       await delay(700)
     })
 
     it('allows the button to be clicked when scrolled to the bottom of TOU', async () => {
       const button = await waitUntilShowUp(screens.TOU.button)
-      await button.click()
-     // await button.sendKeys(Key.RETURN)
+       await click(button)
     })
 
     it('accepts password with length of eight', async () => {
-      const passwordBox = await driver.findElement(screens.create.fieldPassword)
-      const passwordBoxConfirm = await driver.findElement(screens.create.fieldPasswordConfirm)
-      const button = await driver.findElements(screens.create.button)
-
+      const passwordBox = await waitUntilShowUp(screens.create.fieldPassword)
+      const passwordBoxConfirm =  await waitUntilShowUp(screens.create.fieldPasswordConfirm)
+      const button = await waitUntilShowUp(screens.create.button)
       await passwordBox.sendKeys(password)
       await passwordBoxConfirm.sendKeys(password)
-      await button[0].click()
-      await delay(500)
-    })
+      await click(button)
+     })
 
     it('shows vault was created and seed phrase', async () => {
       await delay(300)
-      const element = await driver.findElement(screens.seedPhrase.fieldPhrase)
+      const element = await waitUntilShowUp(screens.seedPhrase.fieldPhrase)
       const seedPhrase = await element.getText()
       assert.equal(seedPhrase.split(' ').length, 12)
-      const continueAfterSeedPhrase = await driver.findElement(screens.seedPhrase.buttonIveCopied)
+      const continueAfterSeedPhrase = await waitUntilShowUp(screens.seedPhrase.buttonIveCopied)
       assert.equal(await continueAfterSeedPhrase.getText(), screens.seedPhrase.textButtonIveCopied)
-      await continueAfterSeedPhrase.click()
-      await delay(300)
+      await click(continueAfterSeedPhrase)
     })
 
     it('sets provider type to localhost', async function () {
-      await delay(300)
       await setProvider(NETWORKS.LOCALHOST)
     })
 
     it('adds a second account', async function () {
       // throw('sf')
-      await driver.findElement(menus.account.menu).click()
+      const accountMenu = await waitUntilShowUp(menus.account.menu)
+      await accountMenu.click()
       await delay(300)
-      await driver.findElement(menus.account.createAccount).click()
+      const item = await waitUntilShowUp(menus.account.createAccount)
+      await item.click()
     })
 
     it('shows account address', async function () {
       await delay(300)
-      accountAddress = await driver.findElement(screens.main.address).getText()
+      const account = await waitUntilShowUp(screens.main.address)
+      accountAddress = await account.getText()
+      console.log(accountAddress)
     })
 
     it('logs out of the vault', async () => {
-      await driver.findElement(menus.sandwich.menu).click()
+      const menu = await waitUntilShowUp(menus.sandwich.menu)
+      await menu.click()
       await delay(500)
-      const logoutButton = await driver.findElement(menus.sandwich.logOut)
+      const logoutButton = await waitUntilShowUp(menus.sandwich.logOut)
       assert.equal(await logoutButton.getText(), 'Log Out')
       await logoutButton.click()
     })
 
     it('accepts account password after lock', async () => {
-      await delay(500)
-      await driver.findElement(screens.lock.fieldPassword).sendKeys(password)
-      await driver.findElement(screens.lock.fieldPassword).sendKeys(Key.ENTER)
-      await delay(500)
+      const box = await waitUntilShowUp(screens.lock.fieldPassword)
+      await box.sendKeys(password)
+      const button = await waitUntilShowUp(screens.lock.buttonLogin)
+      await click(button)
     })
 
     it('shows QR code option', async () => {
-      await delay(300)
-      await driver.findElement(menus.dot.menu).click()
-      await driver.findElement(menus.dot.showQRcode).click()
-      await delay(300)
+      const menu = await waitUntilShowUp(menus.dot.menu)
+      await menu.click()
+      const item = await waitUntilShowUp(menus.dot.showQRcode)
+      await item.click()
+
     })
 
     it('checks QR code address is the same as account details address', async () => {
-      const QRaccountAddress = await driver.findElement(screens.QRcode.address).getText()
-      assert.equal(accountAddress.toLowerCase(), QRaccountAddress)
-      await driver.findElement(screens.QRcode.buttonArrow).click()
-      await delay(500)
+      const field = await waitUntilShowUp(screens.QRcode.address)
+      const text = await field.getText()
+      assert.equal(text.toLowerCase(), accountAddress.toLowerCase(),'QR addres doesn\'t match')
+    })
+
+    it('close QR code screen by clicking button arrow', async () => {
+      const button = await waitUntilShowUp(screens.QRcode.buttonArrow)
+      await click(button)
     })
   })
 
@@ -173,75 +178,55 @@ describe('Metamask popup page', async function () {
     describe('Check screen "Settings" -> "Change password" ', async () => {
 
       it('checks if "Change password" button is present and enabled', async () => {
-        await driver.findElement(menus.sandwich.menu).click()
-        await delay(500)
-        await driver.findElement(menus.sandwich.settings).click()
-        await delay(500)
+        const menu = await waitUntilShowUp(menus.sandwich.menu)
+        await menu.click()
+        const settings =  await waitUntilShowUp(menus.sandwich.settings)
+        await settings.click()
+        await waitUntilShowUp(screens.settings.fieldNewRPC)
         const buttons = await driver.findElements(screens.settings.buttons.changePassword)
+        await scrollTo(buttons[0])
         assert.equal(buttons.length, 1, 'Button "Change password" is not present')
         assert.equal(await buttons[0].isEnabled(), true, 'Button "Change password" is disabled')
+        await click(buttons[0])
       })
 
       it('screen has correct title', async () => {
-        let button = await driver.findElement(screens.settings.buttons.changePassword)
-        await driver.executeScript('arguments[0].scrollIntoView();', button)
-        await delay(700)
-        button = await waitUntilShowUp(screens.settings.buttons.changePassword)
-        console.log(button)
-
-        await delay(5000)
-        //await button.click()
-        await button.sendKeys(Key.RETURN)
-       // await button.click()
-       // await takeScreenshoot('screenChangePass')
-       /* console.log(await waitUntilShowUp(screens.changePassword.title))
-        console.log(await waitUntilShowUp(screens.changePassword.fieldConfirmNewPassword))
-        console.log(await waitUntilShowUp(screens.changePassword.fieldNewPassword))
-        console.log(await waitUntilShowUp(screens.changePassword.fieldOldPassword))
-        console.log(await waitUntilShowUp(screens.changePassword.buttonNo))
-        console.log(await waitUntilShowUp(screens.changePassword.buttonYes))
-        console.log(await waitUntilShowUp(screens.changePassword.arrowLeft))*/
-
-
-
         const title = await waitUntilShowUp(screens.changePassword.title)
-        console.log('title'+ title)
-        console.log('text'+await title.getText())
-       assert.equal(await title.getText(), screens.changePassword.titleText, '"Change password" screen contains incorrect title')
+        assert.equal(await title.getText(), screens.changePassword.titleText, '"Change password" screen contains incorrect title')
       })
 
       it('screen contains correct label', async () => {
+        await waitUntilShowUp(screens.changePassword.label)
         const labels = await driver.findElements(screens.changePassword.label)
         assert.equal(labels.length, 1, 'screen "Change password" doesn\'t contain label')
         assert.equal(await labels[0].getText(), screens.changePassword.labelText, 'label contains incorrect title')
       })
 
       it('clicking the button "No" bring back to "Setting" screen ', async () => {
-        const button = await driver.findElement(screens.changePassword.buttonNo)
-        await button.click()
-        const title = await driver.findElement(screens.settings.title)
+        const button = await waitUntilShowUp(screens.changePassword.buttonNo)
+        await click(button)
+        const title = await waitUntilShowUp(screens.settings.title)
         assert.equal(await title.getText(), screens.settings.titleText, 'button "No" doesnt open settings screen')
         const buttonChangePass = await driver.findElement(screens.settings.buttons.changePassword)
-        await buttonChangePass.click()
+        await scrollTo(buttonChangePass)
+        await click(buttonChangePass)
       })
     })
 
     describe('Validation of errors ', async () => {
 
       before(async () => {
-        fieldOldPassword = await driver.findElement(screens.changePassword.fieldOldPassword)
+        fieldOldPassword = await waitUntilShowUp(screens.changePassword.fieldOldPassword)
         await fieldOldPassword.sendKeys(password)
-        fieldNewPassword = await driver.findElement(screens.changePassword.fieldNewPassword)
-        fieldConfirmNewPassword = await driver.findElement(screens.changePassword.fieldConfirmNewPassword)
-        buttonYes = await driver.findElement(screens.changePassword.buttonYes)
+        fieldNewPassword = await waitUntilShowUp(screens.changePassword.fieldNewPassword)
+        fieldConfirmNewPassword = await waitUntilShowUp(screens.changePassword.fieldConfirmNewPassword)
+        buttonYes = await waitUntilShowUp(screens.changePassword.buttonYes)
       })
 
       it('error if new password shorter than 8 digits', async () => {
         await fieldNewPassword.sendKeys(newPassword.short)
         await fieldConfirmNewPassword.sendKeys(newPassword.short)
-      //  await buttonYes.click()
-        await buttonYes.sendKeys(Key.RETURN)
-       // await buttonYes.click()
+        await click(buttonYes)
         const errors = await driver.findElements(screens.changePassword.error)
         assert.equal(errors.length > 0, true, 'error isn\'t displayed')
         assert.equal(await errors[0].getText(), screens.changePassword.errorText.notLong, 'Error\'s text incorrect')
@@ -252,9 +237,7 @@ describe('Metamask popup page', async function () {
         await clearField(fieldConfirmNewPassword)
         await fieldNewPassword.sendKeys(newPassword.correct)
         await fieldConfirmNewPassword.sendKeys(newPassword.incorrect)
-        //await buttonYes.click()
-        await buttonYes.sendKeys(Key.RETURN)
-        //await buttonYes.click()
+        await click(buttonYes)
         const errors = await driver.findElements(screens.changePassword.error)
         assert.equal(errors.length > 0, true, 'error isn\'t displayed')
         assert.equal(await errors[0].getText(), screens.changePassword.errorText.dontMatch, 'Error\'s text incorrect')
@@ -265,21 +248,17 @@ describe('Metamask popup page', async function () {
         await clearField(fieldConfirmNewPassword)
         await fieldNewPassword.sendKeys(password)
         await fieldConfirmNewPassword.sendKeys(password)
-        //await buttonYes.click()
-        await buttonYes.sendKeys(Key.RETURN)
-       // await buttonYes.click()
+        await click(buttonYes)
         const errors = await driver.findElements(screens.changePassword.error)
         assert.equal(errors.length > 0, true, 'error isn\'t displayed')
         assert.equal(await errors[0].getText(), screens.changePassword.errorText.differ, 'Error\'s text incorrect')
       })
 
-      it('error if old password incorrect, https://github.com/poanetwork/metamask-extension/issues/86 ', async () => {
+      it('error if old password incorrect', async () => {
         await clearField(fieldOldPassword)
         await fieldOldPassword.sendKeys(newPassword.incorrect)
-       // await buttonYes.click()
-        await buttonYes.sendKeys(Key.RETURN)
-       // await buttonYes.click()
-        await delay(1000)
+        await click(buttonYes)
+        await delay(2000)
         const errors = await driver.findElements(screens.changePassword.error)
         assert.equal(errors.length > 0, true, 'error isn\'t displayed')
         assert.equal(await errors[0].getText(), screens.changePassword.errorText.incorrectPassword, 'Error\'s text incorrect')
@@ -293,11 +272,8 @@ describe('Metamask popup page', async function () {
         await fieldOldPassword.sendKeys(password)
         await fieldNewPassword.sendKeys(newPassword.correct)
         await fieldConfirmNewPassword.sendKeys(newPassword.correct)
-      //  await buttonYes.click()
-        await buttonYes.sendKeys(Key.RETURN)
-       // await buttonYes.click()
-
-        await driver.wait(until.elementLocated(screens.settings.buttons.changePassword))
+        await click(buttonYes)
+        await waitUntilShowUp(screens.settings.buttons.changePassword,25)
         const buttons = await driver.findElements(screens.settings.buttons.changePassword)
         assert.equal(buttons.length, 1, 'Button "Change password" is not present')
         assert.equal(await buttons[0].isEnabled(), true, 'Button "Change password" is disabled')
@@ -307,31 +283,30 @@ describe('Metamask popup page', async function () {
     describe('Check if new password is accepted', async () => {
 
       it('user can log out', async () => {
-        await driver.findElement(menus.sandwich.menu).click()
-        await delay(500)
-        await driver.wait(until.elementLocated(menus.sandwich.logOut))
-        const itemLogOut = await driver.findElement(menus.sandwich.logOut)
-        await driver.wait(until.elementIsVisible(itemLogOut))
+        const menu = await waitUntilShowUp(menus.sandwich.menu)
+        await menu.click()
+        const itemLogOut = await waitUntilShowUp(menus.sandwich.logOut)
         await itemLogOut.click()
-        await driver.wait(until.elementLocated(screens.lock.fieldPassword))
-        const fields = await driver.findElements(screens.lock.fieldPassword)
-        assert.equal(fields.length, 1, 'password box isn\'t present after logout')
+        const field = await waitUntilShowUp(screens.lock.fieldPassword)
+        assert.notEqual(field, false, 'password box isn\'t present after logout')
       })
       it('can\'t login with old password', async () => {
-        const field = await driver.findElement(screens.lock.fieldPassword)
+        const field = await waitUntilShowUp(screens.lock.fieldPassword)
         await field.sendKeys(password)
-        await driver.findElement(screens.lock.buttonLogin).click()
-        const errors = await driver.findElements(screens.lock.error)
-        assert.equal(errors.length, 1, 'error isn\'t displayed if password incorrect')
-        assert.equal(await errors[0].getText(), screens.lock.errorText, 'error\'s text incorrect')
+        const button = await waitUntilShowUp(screens.lock.buttonLogin)
+        await click(button)
+        const error = await waitUntilShowUp(screens.lock.error)
+        assert.notEqual(error, false, 'error isn\'t displayed if password incorrect')
+        assert.equal(await error.getText(), screens.lock.errorText, 'error\'s text incorrect')
       })
       it('accepts new password after lock', async () => {
-        const field = await driver.findElement(screens.lock.fieldPassword)
+        const field = await waitUntilShowUp(screens.lock.fieldPassword)
         await clearField(field)
         await field.sendKeys(newPassword.correct)
-        await driver.findElement(screens.lock.buttonLogin).click()
+        const button = await waitUntilShowUp(screens.lock.buttonLogin)
+        await click(button)
 
-        await driver.wait(until.elementLocated(screens.main.buttons.buy))
+        await waitUntilShowUp(screens.main.buttons.buy)
         const buttons = await driver.findElements(screens.main.buttons.buy)
         assert.equal(buttons.length, 1, 'main screen isn\'t displayed')
         password = newPassword.correct
@@ -342,12 +317,11 @@ describe('Metamask popup page', async function () {
   describe('Import Account', () => {
 
     it('opens import account menu', async function () {
-      await driver.wait(until.elementLocated(menus.account.menu))
-      await driver.findElement(menus.account.menu).click()
-      await delay(500)
-      await driver.findElement(menus.account.import).click()
-      await delay(500)
-      const importAccountTitle = await driver.findElement(screens.importAccounts.title)
+      const menu = await waitUntilShowUp(menus.account.menu)
+      await menu.click()
+      const item = await waitUntilShowUp(menus.account.import)
+      await item.click()
+      const importAccountTitle = await waitUntilShowUp(screens.importAccounts.title)
       assert.equal(await importAccountTitle.getText(), screens.importAccounts.textTitle)
     })
 
@@ -355,124 +329,115 @@ describe('Metamask popup page', async function () {
       const privateKeyBox = await waitUntilShowUp(screens.importAccounts.fieldPrivateKey)
       await privateKeyBox.sendKeys('c6b81c1252415d1acfda94474ab8f662a44c045f96749c805ff12a6074081586')// demo private key
       const importButton = await waitUntilShowUp(screens.importAccounts.buttonImport)
-      await importButton.click()
-      await delay(200)
-      // check, that account is added
-      await driver.findElement(menus.account.menu).click()
-      await delay(500)
-      const importedLabel = await driver.findElement(menus.account.labelImported)
+      await click(importButton)
+
+      const menu = await waitUntilShowUp(menus.account.menu)
+      await menu.click()
+
+      const importedLabel = await waitUntilShowUp(menus.account.labelImported)
       assert.equal(await importedLabel.getText(), 'IMPORTED')
     })
 
     it('opens delete imported account screen', async function () {
-      await driver.findElement(menus.account.delete).click()
-      await delay(200)
-      const deleteImportedAccountTitle = await driver.findElement(screens.deleteImportedAccount.title)
+      const menu = await waitUntilShowUp(menus.account.delete)
+      await menu.click()
+      const deleteImportedAccountTitle = await waitUntilShowUp(screens.deleteImportedAccount.title)
       assert.equal(await deleteImportedAccountTitle.getText(), screens.deleteImportedAccount.titleText)
     })
 
     it('doesn\'t remove imported account with \'No\' button', async function () {
-      const NoButton = await driver.findElement(screens.deleteImportedAccount.buttons.no)
-      await NoButton.click()
-      await delay(500)
-      const settingsTitle = await driver.findElement(screens.settings.title)
+      const NoButton = await waitUntilShowUp(screens.deleteImportedAccount.buttons.no)
+      await click(NoButton)
+      const settingsTitle = await waitUntilShowUp(screens.settings.title)
       assert.equal(await settingsTitle.getText(), 'Settings')
 
       // check, that imported account still exists
-      await driver.findElement(menus.account.menu).click()
-      await delay(500)
-      const importedLabel = await driver.findElement(menus.account.labelImported)
+      const menu = await waitUntilShowUp(menus.account.menu)
+      await menu.click()
+      const importedLabel = await waitUntilShowUp(menus.account.labelImported)
       assert.equal(await importedLabel.getText(), 'IMPORTED')
     })
 
     it('opens delete imported account screen again', async function () {
-      await driver.findElement(menus.account.delete).click()
-      await delay(500)
+      const menu = await waitUntilShowUp(menus.account.delete)
+      await menu.click()
     })
 
     it('removes imported account with \'Yes\' button', async function () {
-      const YesButton = await driver.findElement(screens.deleteImportedAccount.buttons.yes)
-      await YesButton.click()
-      await delay(500)
-      const settingsTitle = await driver.findElement(screens.settings.title)
+      const YesButton = await waitUntilShowUp(screens.deleteImportedAccount.buttons.yes)
+      await click(YesButton)
+      const settingsTitle = await waitUntilShowUp(screens.settings.title)
       assert.equal(await settingsTitle.getText(), 'Settings')
 
       // check, that imported account is removed
-      await driver.findElement(menus.account.menu).click()
-      await delay(500)
+      let menu = await waitUntilShowUp(menus.account.menu)
+      await menu.click()
+      await waitUntilShowUp(menus.account.labelImported,25)
       const importedAccounts = await driver.findElements(menus.account.labelImported)
       assert.ok(importedAccounts.length === 0)
-      await driver.findElement(menus.account.menu).click()
-      await delay(500)
+      await menu.click()
     })
   })
 
   describe('Import Ganache seed phrase', function () {
 
     it('logs out', async function () {
-      await driver.findElement(menus.sandwich.menu).click()
-      await delay(200)
-      const logOut = await driver.findElement(menus.sandwich.logOut)
+      const menu = await waitUntilShowUp(menus.sandwich.menu)
+      await menu.click()
+      const logOut = await waitUntilShowUp(menus.sandwich.logOut)
       assert.equal(await logOut.getText(), menus.sandwich.textLogOut)
       await logOut.click()
-      await delay(300)
-    })
+     })
 
     it('restores from seed phrase', async function () {
-      const restoreSeedLink = await driver.findElement(screens.lock.linkRestore)
+      const restoreSeedLink = await waitUntilShowUp(screens.lock.linkRestore)
       assert.equal(await restoreSeedLink.getText(), screens.lock.linkRestoreText)
       await restoreSeedLink.click()
-      await delay(100)
     })
 
     it('adds seed phrase', async function () {
       const testSeedPhrase = 'phrase upgrade clock rough situate wedding elder clever doctor stamp excess tent'
-      const seedTextArea = await driver.findElement(screens.restoreVault.textArea)
+      const seedTextArea = await waitUntilShowUp(screens.restoreVault.textArea)
       await seedTextArea.sendKeys(testSeedPhrase)
 
-      await driver.findElement(screens.restoreVault.fieldPassword).sendKeys(password)
-      await driver.findElement(screens.restoreVault.fieldPasswordConfirm).sendKeys(password)
-      await driver.findElement(screens.restoreVault.buttos.ok).click()
-      await delay(500)
+      let field = await driver.findElement(screens.restoreVault.fieldPassword)
+      await field.sendKeys(password)
+      field = await driver.findElement(screens.restoreVault.fieldPasswordConfirm)
+      await field.sendKeys(password)
+      field = await waitUntilShowUp(screens.restoreVault.buttos.ok)
+      await click(field)
     })
 
     it.skip('balance renders', async function () {
-      await delay(200)
-      const balance = await driver.findElement(screens.main.balance)
+      const balance = await waitUntilShowUp(screens.main.balance)
       assert.equal(await balance.getText(), '100.000')
-      await delay(200)
     })
 
     it('sends transaction', async function () {
-      const sendButton = await driver.findElement(screens.main.buttons.send)
+      const sendButton = await waitUntilShowUp(screens.main.buttons.send)
       assert.equal(await sendButton.getText(), screens.main.buttons.sendText)
-      await sendButton.click()
-      await delay(200)
-    })
+      await click(sendButton)
+     })
 
     it('adds recipient address and amount', async function () {
-      const sendTranscationScreen = await driver.findElement(screens.sendTransaction.title).getText()
-      assert.equal(sendTranscationScreen, screens.sendTransaction.titleText)
-      const inputAddress = await driver.findElement(screens.sendTransaction.fields.address)
-      const inputAmmount = await driver.findElement(screens.sendTransaction.fields.amount)
+      const sendTranscationScreen = await waitUntilShowUp(screens.sendTransaction.title)
+      assert.equal(await sendTranscationScreen.getText(), screens.sendTransaction.titleText,'Transaction screen has incorrect titlr')
+      const inputAddress = await waitUntilShowUp(screens.sendTransaction.fields.address)
+      const inputAmmount = await waitUntilShowUp(screens.sendTransaction.fields.amount)
       await inputAddress.sendKeys('0x2f318C334780961FB129D2a6c30D0763d9a5C970')
       await inputAmmount.sendKeys('10')
-      await driver.findElement(screens.sendTransaction.buttonNext).click()
-      await delay(300)
+      const button = await waitUntilShowUp(screens.sendTransaction.buttonNext)
+      await button.click()
     })
 
     it('confirms transaction', async function () {
-      await delay(300)
-      const bySubmitButton = screens.confirmTransaction.buttons.submit
-      const submitButton = await driver.wait(until.elementLocated(bySubmitButton))
 
-      await submitButton.click()
-
-      await delay(1500)
+      const submitButton = await waitUntilShowUp(screens.confirmTransaction.buttons.submit)
+      await click(submitButton)
     })
 
     it('finds the transaction in the transactions list', async function () {
-      const transactionAmount = await driver.findElement(screens.main.transactionList)
+      const transactionAmount = await waitUntilShowUp(screens.main.transactionList)
       assert.equal(await transactionAmount.getText(), '10.0')
     })
   })
@@ -484,22 +449,22 @@ describe('Metamask popup page', async function () {
     })
 
     it('navigates to create token contract link', async function () {
-      const createToken = await driver.findElement(By.css('#bs-example-navbar-collapse-1 > ul > li:nth-child(3) > a'))
+      const createToken = await waitUntilShowUp(By.css('#bs-example-navbar-collapse-1 > ul > li:nth-child(3) > a'))
       await createToken.click()
     })
 
     it('adds input for token', async function () {
-      const totalSupply = await driver.findElement(By.css('#main > div > div > div > div:nth-child(2) > div > div:nth-child(5) > input'))
-      const tokenName = await driver.findElement(By.css('#main > div > div > div > div:nth-child(2) > div > div:nth-child(6) > input'))
-      const tokenDecimal = await driver.findElement(By.css('#main > div > div > div > div:nth-child(2) > div > div:nth-child(7) > input'))
-      const tokenSymbol = await driver.findElement(By.css('#main > div > div > div > div:nth-child(2) > div > div:nth-child(8) > input'))
-      const createToken = await driver.findElement(By.css('#main > div > div > div > div:nth-child(2) > div > button'))
+      const totalSupply = await waitUntilShowUp(By.css('#main > div > div > div > div:nth-child(2) > div > div:nth-child(5) > input'))
+      const tokenName = await waitUntilShowUp(By.css('#main > div > div > div > div:nth-child(2) > div > div:nth-child(6) > input'))
+      const tokenDecimal = await waitUntilShowUp(By.css('#main > div > div > div > div:nth-child(2) > div > div:nth-child(7) > input'))
+      const tokenSymbol = await waitUntilShowUp(By.css('#main > div > div > div > div:nth-child(2) > div > div:nth-child(8) > input'))
+      const createToken = await waitUntilShowUp(By.css('#main > div > div > div > div:nth-child(2) > div > button'))
 
       await totalSupply.sendKeys('100')
       await tokenName.sendKeys('Test')
       await tokenDecimal.sendKeys('0')
       await tokenSymbol.sendKeys('TST')
-      await createToken.click()
+      await click(createToken)
       await delay(1000)
     })
 
@@ -534,33 +499,32 @@ describe('Metamask popup page', async function () {
   describe('Add Token', function () {
 
     it('switches to the add token screen', async function () {
-      const tokensTab = await driver.findElement(By.css('#app-content > div > div.app-primary.from-right > div > section > div > div.inactiveForm.pointer'))
+      await waitUntilShowUp(screens.main.buttons.send)
+      const tokensTab = await driver.findElement(screens.main.tokens.menu)
       assert.equal(await tokensTab.getText(), 'Tokens')
       await tokensTab.click()
-      await delay(300)
-    })
+     })
 
     it('navigates to the add token screen', async function () {
-      const addTokenButton = await driver.findElement(By.css('#app-content > div > div.app-primary.from-right > div > section > div.full-flex-height > div > button'))
-      assert.equal(await addTokenButton.getText(), 'Add Token')
-      await addTokenButton.click()
+      const addTokenButton = await waitUntilShowUp(screens.main.tokens.buttonAdd)
+      assert.equal(await addTokenButton.getText(), screens.main.tokens.buttonAddText)
+      await click(addTokenButton)
     })
 
-    it('checks add token screen rendered', async function () {
-      const addTokenScreen = await driver.findElement(screens.settings.title)
-      assert.equal(await addTokenScreen.getText(), 'Add Token')
+    it('checks add token screen has correct title', async function () {
+      const addTokenScreen = await waitUntilShowUp(By.className('page-subtitle'))
+      assert.equal(await addTokenScreen.getText(), screens.addToken.titleText)
     })
 
     it('adds token parameters', async function () {
-      const tokenContractAddress = await driver.findElement(By.css('#token-address'))
+      const tokenContractAddress = await waitUntilShowUp(screens.addToken.fields.contractAddress)
       await tokenContractAddress.sendKeys(tokenAddress)
-      await delay(300)
-      await driver.findElement(By.css('#app-content > div > div.app-primary.from-right > div > div.flex-column.flex-justify-center.flex-grow.select-none > div > button')).click()
-      await delay(200)
+      const button = await waitUntilShowUp(screens.addToken.buttonAdd)
+      await click(button)
     })
 
     it('checks the token balance', async function () {
-      const tokenBalance = await driver.findElement(screens.main.tokens.balance)
+      const tokenBalance = await waitUntilShowUp(screens.main.tokens.balance)
       assert.equal(await tokenBalance.getText(), '100 TST')
     })
   })
@@ -875,10 +839,26 @@ describe('Metamask popup page', async function () {
     }
     await driver.executeScript("document.getElementsByClassName('dropdown-menu-item')[" + counter + '].click();')
   }
-  async function takeScreenshoot(name) {
-    let res = await driver.takeScreenshot();
-    let buf = new Buffer(res, 'base64');
-    await fs.writeFileSync('./test-artifacts/firefox' +name + '.png', buf);
+  async function scrollTo(element){
+    try {
+      await driver.executeScript('arguments[0].scrollIntoView();', button)
+      return true
+    }
+    catch(err)
+    {
+      return false
+    }
+  }
+
+  async function click(element){
+    try{
+      await element.sendKeys(Key.RETURN)
+      return true
+    }
+    catch(err)
+    {
+     return false
+    }
 
   }
   async function waitUntilDisappear (by, Twait) {
@@ -923,7 +903,7 @@ describe('Metamask popup page', async function () {
       assert.equal(tokens.length, 0, 'Unexpected token presents')
       return true
     } catch (err) {
-      return err
+      return false
     }
   }
 

@@ -25,10 +25,22 @@ module.exports = {
     },
     networks: {
       addedCustomRpc: By.className('span custom-rpc'),
-      customRpc: By.css('#app-content > div > div:nth-child(2) > span > div > li:nth-child(9)'),
+      customRpc: By.css('#app-content > div > div:nth-child(2) > span > div > li:nth-child(9)')
     },
   },
   screens: {
+    addToken: {
+      title: By.className('page-subtitle'),
+      titleText: 'Add Token',
+      fields: {
+        contractAddress: By.id('token-address'),
+        tokenSymbol: By.id('token_symbol'),
+        decimals: By.id('token_decimals'),
+      },
+      buttonAdd: By.css('.flex-space-around > button:nth-child(7)')
+
+    },
+
     deleteCustomRPC: {
       buttons: {
         yes: By.css('#app-content > div > div.app-primary.from-right > div > div.flex-row.flex-right > button:nth-child(2)'),
@@ -111,13 +123,14 @@ module.exports = {
       address: By.css('#app-content > div > div.app-primary.from-left > div > div > div:nth-child(1) > flex-column > div.flex-row > div'),
       tokens: {
         remove: By.className('trash'),
-        menu: 'activeForm right',
+        menu: By.className('inactiveForm pointer'),
         token: By.css('#app-content > div > div.app-primary.from-left > div > section > div.full-flex-height > ol > li'),
         balance: By.css('#app-content > div > div.app-primary.from-left > div > section > div.full-flex-height > ol > li:nth-child(2) > h3'),
         amount: By.css('#app-content > div > div.app-primary.from-left > div > section > div.full-flex-height > div > span'),
         textNoTokens: 'No tokens found',
         textYouOwn1token: 'You own 1 token',
-        buttonAdd: By.css('#app-content > div > div.app-primary.from-left > div > section > div.full-flex-height > div > button'),
+        buttonAdd: By.css('div.full-flex-height:nth-child(2) > div:nth-child(1) > button:nth-child(2)'),
+        buttonAddText: 'Add Token'
       },
     },
     changePassword: {
