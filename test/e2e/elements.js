@@ -162,9 +162,12 @@ module.exports = {
     },
 
     TOU: {
-      titleText: 'Nifty Wallet',
-      header: By.className('terms-header'),
+      agreement:By.className('notice-box'),
+      titleText: 'Terms of Use',
+      title: By.className('terms-header'),
       button: By.css('button'),
+      linkTerms:By.linkText('Terms of Service'),
+      linkTermsText:'Terms of Service'
     },
     create: {
       fieldPassword: By.id('password-box'),

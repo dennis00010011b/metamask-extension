@@ -66,28 +66,33 @@ describe('Metamask popup page', async function () {
 
     it('matches Nifty Wallet title', async () => {
       const title = await driver.getTitle()
-      assert.equal(title, screens.TOU.titleText, 'title matches Nifty Wallet')
-      await delay(300)
+      assert.equal(title, 'Nifty Wallet', 'title matches Nifty Wallet')
     })
 
-    it('show terms of use', async () => {
-      const terms = await waitUntilShowUp(screens.TOU.header)
-      assert.equal(await terms.getText(), 'Terms of Use', 'shows terms of use')
-      delay(300)
+    it('screen \'Terms of Use\' has not empty agreement', async () => {
+      const terms = await waitUntilShowUp(screens.TOU.agreement)
+      const text = await terms.getText()
+      assert.equal(text.length > 400, true, 'agreement is too short')
     })
 
-    it('checks if the TOU button is enabled', async () => {
+    it('screen \'Terms of Use\' has correct title', async () => {
+      const terms = await waitUntilShowUp(screens.TOU.title)
+      assert.equal(await terms.getText(), screens.TOU.titleText, 'title is incorrect')
+     })
+
+    it('checks if the TOU contains link \'Terms of service\'', async () => {
+      const element = await driver.findElement(screens.TOU.linkTerms)
+      await scrollTo(screens.TOU.linkTerms)
+      assert.notEqual(element, null,' link \'Terms of service\' isn\'t present')
+      assert.equal(await element.getText(), screens.TOU.linkTermsText,'incorrect name of link \'Terms of service\'')
+    })
+
+    it('checks if the button \'Accept\' is present and enabled', async () => {
       const button = await waitUntilShowUp(screens.TOU.button)
-      assert.equal(await button.isEnabled(), true, 'enabled continue button')
-      const element = await waitUntilShowUp(By.linkText('Terms of Service'))
-      await driver.executeScript('arguments[0].scrollIntoView(true)', element)
-      await delay(700)
-    })
-
-    it('allows the button to be clicked when scrolled to the bottom of TOU', async () => {
-      const button = await waitUntilShowUp(screens.TOU.button)
-       await click(button)
-    })
+      assert.notEqual(button, false, 'button isn\'t present')
+      assert.equal(await button.isEnabled(), true, 'button isn\'t enabled')
+      await click(button)
+     })
 
     it('accepts password with length of eight', async () => {
       const passwordBox = await waitUntilShowUp(screens.create.fieldPassword)
@@ -227,6 +232,7 @@ describe('Metamask popup page', async function () {
         await fieldNewPassword.sendKeys(newPassword.short)
         await fieldConfirmNewPassword.sendKeys(newPassword.short)
         await click(buttonYes)
+        await delay(2000)
         const errors = await driver.findElements(screens.changePassword.error)
         assert.equal(errors.length > 0, true, 'error isn\'t displayed')
         assert.equal(await errors[0].getText(), screens.changePassword.errorText.notLong, 'Error\'s text incorrect')
@@ -238,6 +244,7 @@ describe('Metamask popup page', async function () {
         await fieldNewPassword.sendKeys(newPassword.correct)
         await fieldConfirmNewPassword.sendKeys(newPassword.incorrect)
         await click(buttonYes)
+        await delay(2000)
         const errors = await driver.findElements(screens.changePassword.error)
         assert.equal(errors.length > 0, true, 'error isn\'t displayed')
         assert.equal(await errors[0].getText(), screens.changePassword.errorText.dontMatch, 'Error\'s text incorrect')
@@ -249,6 +256,7 @@ describe('Metamask popup page', async function () {
         await fieldNewPassword.sendKeys(password)
         await fieldConfirmNewPassword.sendKeys(password)
         await click(buttonYes)
+        await delay(2000)
         const errors = await driver.findElements(screens.changePassword.error)
         assert.equal(errors.length > 0, true, 'error isn\'t displayed')
         assert.equal(await errors[0].getText(), screens.changePassword.errorText.differ, 'Error\'s text incorrect')
@@ -802,12 +810,9 @@ describe('Metamask popup page', async function () {
     })
   })
 
-  async function setProviderType (type) {
-    await driver.executeScript('window.metamask.setProviderType(arguments[0]);', type)
-  }
-
   async function setProvider (network) {
-    await driver.findElement(screens.main.network).click()
+    const menu = await waitUntilShowUp(screens.main.network)
+    await menu.click()
     let counter
     switch (network) {
       case NETWORKS.POA:
