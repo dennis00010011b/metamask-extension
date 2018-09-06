@@ -5,7 +5,7 @@ const assert = require('assert')
 const pify = require('pify')
 const webdriver = require('selenium-webdriver')
 const { By, Key, until } = webdriver
-const { clearField, delay, buildChromeWebDriver, buildFirefoxWebdriver, installWebExt, getExtensionIdChrome, getExtensionIdFirefox } = require('./func')
+const { delay, buildChromeWebDriver, buildFirefoxWebdriver, installWebExt, getExtensionIdChrome, getExtensionIdFirefox } = require('./func')
 const { menus, screens, elements, NETWORKS } = require('./elements')
 
 describe('Metamask popup page', async function () {
@@ -265,6 +265,7 @@ describe('Metamask popup page', async function () {
       it('error if old password incorrect', async () => {
         await clearField(fieldOldPassword)
         await fieldOldPassword.sendKeys(newPassword.incorrect)
+        await click(buttonYes)
         await click(buttonYes)
         await delay(2000)
         const errors = await driver.findElements(screens.changePassword.error)
@@ -844,6 +845,7 @@ describe('Metamask popup page', async function () {
     }
     await driver.executeScript("document.getElementsByClassName('dropdown-menu-item')[" + counter + '].click();')
   }
+
   async function scrollTo(element){
     try {
       await driver.executeScript('arguments[0].scrollIntoView();', element)
@@ -864,6 +866,15 @@ describe('Metamask popup page', async function () {
     {
      return false
     }
+  }
+
+  async function clearField (field, number) {
+    await click(field)
+    if (number === undefined) number = 40
+    for (let i = 0; i < number; i++) {
+      await field.sendKeys(Key.BACK_SPACE)
+    }
+
 
   }
   async function waitUntilDisappear (by, Twait) {
