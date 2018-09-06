@@ -160,12 +160,7 @@ module.exports = {
       linkRestore: By.css('#app-content > div > div.app-primary.from-left > div > div.flex-row.flex-center.flex-grow > p'),
       linkRestoreText: 'Restore from seed phrase',
     },
-    addToken: {
-      fieldTokenContractAddress: By.id('token-address'),
-      fieldTokenSymbol: By.id('token_symbol'),
-      fieldDecimals: By.id('token_decimals'),
-      buttonAdd: By.css('#app-content > div > div.app-primary.from-right > div > div.flex-column.flex-justify-center.flex-grow.select-none > div > button'),
-    },
+
     TOU: {
       titleText: 'Nifty Wallet',
       header: By.className('terms-header'),

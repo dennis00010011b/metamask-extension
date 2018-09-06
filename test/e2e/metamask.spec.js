@@ -841,7 +841,7 @@ describe('Metamask popup page', async function () {
   }
   async function scrollTo(element){
     try {
-      await driver.executeScript('arguments[0].scrollIntoView();', button)
+      await driver.executeScript('arguments[0].scrollIntoView();', element)
       return true
     }
     catch(err)
@@ -911,12 +911,12 @@ describe('Metamask popup page', async function () {
     try {
       const button = await waitUntilShowUp(screens.main.tokens.buttonAdd)
       await button.click()
-      const field = await waitUntilShowUp(screens.addToken.fieldTokenContractAddress)
+      const field = await waitUntilShowUp(screens.addToken.fields.contractAddress)
       await field.sendKeys(tokenAddress)
       await delay(500)
-      await driver.findElement(screens.addToken.fieldTokenSymbol).sendKeys(tokenName)
+      await driver.findElement(screens.addToken.fields.tokenSymbol).sendKeys(tokenName)
       await delay(500)
-      await driver.findElement(screens.addToken.fieldDecimals).sendKeys(tokenDecimals)
+      await driver.findElement(screens.addToken.fields.decimals).sendKeys(tokenDecimals)
       const buttonAdd = await waitUntilShowUp(screens.addToken.buttonAdd)
       await buttonAdd.click()
       return true
