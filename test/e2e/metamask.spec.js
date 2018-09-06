@@ -4,7 +4,7 @@ const path = require('path')
 const assert = require('assert')
 const pify = require('pify')
 const webdriver = require('selenium-webdriver')
-const { By, Key, until } = webdriver
+const { By, Key } = webdriver
 const { delay, buildChromeWebDriver, buildFirefoxWebdriver, installWebExt, getExtensionIdChrome, getExtensionIdFirefox } = require('./func')
 const { menus, screens, elements, NETWORKS } = require('./elements')
 
