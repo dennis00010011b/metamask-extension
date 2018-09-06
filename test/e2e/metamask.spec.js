@@ -436,7 +436,7 @@ describe('Metamask popup page', async function () {
       await inputAddress.sendKeys('0x2f318C334780961FB129D2a6c30D0763d9a5C970')
       await inputAmmount.sendKeys('10')
       const button = await waitUntilShowUp(screens.sendTransaction.buttonNext)
-      await button.click()
+      await click(button)
     })
 
     it('confirms transaction', async function () {
@@ -581,42 +581,42 @@ describe('Metamask popup page', async function () {
       it('adds token with  the same address to POA network', async function () {
         await setProvider(NETWORKS.POA)
         await addToken(tokenAddress, tokenName, tokenDecimals)
-        const tokenBalance = await await waitUntilShowUp(screens.main.tokens.balance)
+        const tokenBalance = await waitUntilShowUp(screens.main.tokens.balance)
         assert.notEqual(await tokenBalance.getText(), '')
       })
 
       it('adds token with  the same address to SOKOL network', async function () {
         await setProvider(NETWORKS.SOKOL)
         await addToken(tokenAddress, tokenName, tokenDecimals)
-        const tokenBalance = await await waitUntilShowUp(screens.main.tokens.balance)
+        const tokenBalance = await waitUntilShowUp(screens.main.tokens.balance)
         assert.notEqual(await tokenBalance.getText(), '')
       })
 
       it('adds token with  the same address to MAINNET network', async function () {
         await setProvider(NETWORKS.MAINNET)
         await addToken(tokenAddress, tokenName, tokenDecimals)
-        const tokenBalance = await await waitUntilShowUp(screens.main.tokens.balance)
+        const tokenBalance = await waitUntilShowUp(screens.main.tokens.balance)
         assert.notEqual(await tokenBalance.getText(), '')
       })
 
       it('adds token with  the same address to ROPSTEN network', async function () {
         await setProvider(NETWORKS.ROPSTEN)
         await addToken(tokenAddress, tokenName, tokenDecimals)
-        const tokenBalance = await await waitUntilShowUp(screens.main.tokens.balance)
+        const tokenBalance = await waitUntilShowUp(screens.main.tokens.balance)
         assert.notEqual(await tokenBalance.getText(), '')
       })
 
       it('adds token with  the same address to KOVAN network', async function () {
         await setProvider(NETWORKS.KOVAN)
         await addToken(tokenAddress, tokenName, tokenDecimals)
-        const tokenBalance = await await waitUntilShowUp(screens.main.tokens.balance)
+        const tokenBalance = await waitUntilShowUp(screens.main.tokens.balance)
         assert.notEqual(await tokenBalance.getText(), '')
       })
 
       it('adds token with  the same address to RINKEBY network', async function () {
         await setProvider(NETWORKS.RINKEBY)
         await addToken(tokenAddress, tokenName, tokenDecimals)
-        const tokenBalance = await await waitUntilShowUp(screens.main.tokens.balance)
+        const tokenBalance = await waitUntilShowUp(screens.main.tokens.balance)
         assert.notEqual(await tokenBalance.getText(), '')
       })
 
@@ -710,15 +710,16 @@ describe('Metamask popup page', async function () {
     const correctRpcUrl = 'https://poa.infura.io/test1'
 
     it('switches to settings screen through menu \'Network -> Custom RPC\'', async function () {
-
       await setProvider(NETWORKS.CUSTOM)
-      const settings = await driver.findElement(screens.settings.title)
+      const settings = await waitUntilShowUp(screens.settings.title)
       assert.equal(await settings.getText(), screens.settings.titleText, 'inappropriate screen is opened')
     })
 
     it('error message if new Rpc url is invalid', async function () {
-      await driver.findElement(screens.settings.fieldNewRPC).sendKeys(invalidStringUrl)
-      await driver.findElement(screens.settings.buttonSave).click()
+      const field = await waitUntilShowUp(screens.settings.fieldNewRPC)
+      await field.sendKeys(invalidStringUrl)
+      const button = await waitUntilShowUp(screens.settings.buttonSave)
+      await click(button)
       assert.equal(await waitUntilShowUp(screens.settings.buttons.delete, 5), false, 'invalid Rpc was added')
       const errors = await driver.findElements(screens.settings.error)
       assert.equal(errors.length, 1, 'error isn\'t displayed if Rpc url incorrect')
@@ -730,7 +731,8 @@ describe('Metamask popup page', async function () {
       await clearField(fieldRpc)
       await clearField(fieldRpc)
       await fieldRpc.sendKeys(urlWithoutHttp)
-      await driver.findElement(screens.settings.buttonSave).click()
+      const button = await waitUntilShowUp(screens.settings.buttonSave)
+      await click(button)
       assert.equal(await waitUntilShowUp(screens.settings.buttons.delete, 5), false, 'invalid Rpc was added')
       const errors = await driver.findElements(screens.settings.error)
       assert.equal(errors.length, 1, 'error isn\'t displayed if Rpc url incorrect')
@@ -742,7 +744,8 @@ describe('Metamask popup page', async function () {
       await clearField(fieldRpc)
       await clearField(fieldRpc)
       await fieldRpc.sendKeys(invalidEndpoint)
-      await driver.findElement(screens.settings.buttonSave).click()
+      const button = await waitUntilShowUp(screens.settings.buttonSave)
+      await click(button)
       assert.equal(await waitUntilShowUp(screens.settings.buttons.delete, 5), false, 'invalid Rpc was added')
       const errors = await driver.findElements(screens.settings.error)
       assert.equal(errors.length, 1, 'error isn\'t displayed if Rpc url incorrect')
@@ -763,18 +766,19 @@ describe('Metamask popup page', async function () {
     })
 
     it('new added Rpc displayed in network dropdown menu', async function () {
-
-      await driver.findElement(screens.main.network).click()
+      let menu = await waitUntilShowUp(screens.main.network)
+      await menu.click()
       const item = await waitUntilShowUp(menus.networks.addedCustomRpc)
       assert.equal(await item.getText(), correctRpcUrl, 'Added custom Url isn\'t displayed ')
-      await driver.findElement(screens.main.network).click()
+      menu = await waitUntilShowUp(screens.main.network)
+      await menu.click()
     })
 
     it('click button \'Delete\' opens screen \'Delete Custom RPC\'', async function () {
       await delay(1000)
       const buttonDelete = await waitUntilShowUp(screens.settings.buttons.delete, 10)
       assert.equal(await buttonDelete.getText(), 'Delete')
-      await buttonDelete.click()
+      await click(buttonDelete)
       const title = await waitUntilShowUp(screens.settings.title)
       assert.equal(await title.getText(), screens.deleteCustomRPC.titleText, 'inappropriate screen is opened')
     })
@@ -782,17 +786,17 @@ describe('Metamask popup page', async function () {
     it('click button \'No\' opens screen \'Settings\'', async function () {
       const buttonNo = await waitUntilShowUp(screens.deleteCustomRPC.buttons.no)
       assert.equal(await buttonNo.getText(), 'No')
-      await buttonNo.click()
+      await click(buttonNo)
       const title = await waitUntilShowUp(screens.settings.title)
       assert.equal(await title.getText(), screens.settings.titleText, 'inappropriate screen is opened')
     })
 
     it('user able to delete custom rpc', async function () {
-      const buttonDelete = await waitUntilShowUp(screens.settings.buttons.delete, 10)
-      await buttonDelete.click()
+      const buttonDelete = await waitUntilShowUp(screens.settings.buttons.delete, 25)
+      await click(buttonDelete)
       const yesButton = await waitUntilShowUp(screens.deleteCustomRPC.buttons.yes)
       assert.equal(await yesButton.getText(), 'Yes')
-      await yesButton.click()
+      await click(yesButton)
       const title = await waitUntilShowUp(screens.settings.title)
       assert.equal(await title.getText(), screens.settings.titleText, 'inappropriate screen is opened')
     })
@@ -874,9 +878,8 @@ describe('Metamask popup page', async function () {
     for (let i = 0; i < number; i++) {
       await field.sendKeys(Key.BACK_SPACE)
     }
-
-
   }
+
   async function waitUntilDisappear (by, Twait) {
     if (Twait === undefined) Twait = 10
     do {
@@ -926,7 +929,7 @@ describe('Metamask popup page', async function () {
   async function addToken (tokenAddress, tokenName, tokenDecimals) {
     try {
       const button = await waitUntilShowUp(screens.main.tokens.buttonAdd)
-      await button.click()
+      await click(button)
       const field = await waitUntilShowUp(screens.addToken.fields.contractAddress)
       await field.sendKeys(tokenAddress)
       await delay(500)
@@ -934,7 +937,7 @@ describe('Metamask popup page', async function () {
       await delay(500)
       await driver.findElement(screens.addToken.fields.decimals).sendKeys(tokenDecimals)
       const buttonAdd = await waitUntilShowUp(screens.addToken.buttonAdd)
-      await buttonAdd.click()
+      await click(buttonAdd)
       return true
     } catch (err) {
       return false
