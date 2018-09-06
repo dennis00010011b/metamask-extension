@@ -820,6 +820,7 @@ describe('Metamask popup page', async function () {
   })
 
   async function setProvider(network) {
+    await delay(300)
     const menu = await waitUntilShowUp(screens.main.network)
     await menu.click()
     let counter
