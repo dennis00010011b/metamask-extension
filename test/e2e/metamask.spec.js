@@ -121,7 +121,6 @@ describe('Metamask popup page', async function () {
       // throw('sf')
       const accountMenu = await waitUntilShowUp(menus.account.menu)
       await accountMenu.click()
-      await delay(300)
       const item = await waitUntilShowUp(menus.account.createAccount)
       await item.click()
     })
