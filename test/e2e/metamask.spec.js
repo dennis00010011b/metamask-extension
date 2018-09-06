@@ -87,6 +87,7 @@ describe('Metamask popup page', async function () {
     it('allows the button to be clicked when scrolled to the bottom of TOU', async () => {
       const button = await waitUntilShowUp(screens.TOU.button)
       await button.click()
+     // await button.sendKeys(Key.RETURN)
     })
 
     it('accepts password with length of eight', async () => {
@@ -189,16 +190,17 @@ describe('Metamask popup page', async function () {
         console.log(button)
 
         await delay(5000)
-        await button.click()
+        //await button.click()
+        await button.sendKeys(Key.RETURN)
        // await button.click()
        // await takeScreenshoot('screenChangePass')
-        console.log(await waitUntilShowUp(screens.changePassword.title))
+       /* console.log(await waitUntilShowUp(screens.changePassword.title))
         console.log(await waitUntilShowUp(screens.changePassword.fieldConfirmNewPassword))
         console.log(await waitUntilShowUp(screens.changePassword.fieldNewPassword))
         console.log(await waitUntilShowUp(screens.changePassword.fieldOldPassword))
         console.log(await waitUntilShowUp(screens.changePassword.buttonNo))
         console.log(await waitUntilShowUp(screens.changePassword.buttonYes))
-        console.log(await waitUntilShowUp(screens.changePassword.arrowLeft))
+        console.log(await waitUntilShowUp(screens.changePassword.arrowLeft))*/
 
 
 
@@ -237,7 +239,8 @@ describe('Metamask popup page', async function () {
       it('error if new password shorter than 8 digits', async () => {
         await fieldNewPassword.sendKeys(newPassword.short)
         await fieldConfirmNewPassword.sendKeys(newPassword.short)
-        await buttonYes.click()
+      //  await buttonYes.click()
+        await buttonYes.sendKeys(Key.RETURN)
        // await buttonYes.click()
         const errors = await driver.findElements(screens.changePassword.error)
         assert.equal(errors.length > 0, true, 'error isn\'t displayed')
@@ -249,7 +252,8 @@ describe('Metamask popup page', async function () {
         await clearField(fieldConfirmNewPassword)
         await fieldNewPassword.sendKeys(newPassword.correct)
         await fieldConfirmNewPassword.sendKeys(newPassword.incorrect)
-        await buttonYes.click()
+        //await buttonYes.click()
+        await buttonYes.sendKeys(Key.RETURN)
         //await buttonYes.click()
         const errors = await driver.findElements(screens.changePassword.error)
         assert.equal(errors.length > 0, true, 'error isn\'t displayed')
@@ -261,7 +265,8 @@ describe('Metamask popup page', async function () {
         await clearField(fieldConfirmNewPassword)
         await fieldNewPassword.sendKeys(password)
         await fieldConfirmNewPassword.sendKeys(password)
-        await buttonYes.click()
+        //await buttonYes.click()
+        await buttonYes.sendKeys(Key.RETURN)
        // await buttonYes.click()
         const errors = await driver.findElements(screens.changePassword.error)
         assert.equal(errors.length > 0, true, 'error isn\'t displayed')
@@ -271,8 +276,10 @@ describe('Metamask popup page', async function () {
       it('error if old password incorrect, https://github.com/poanetwork/metamask-extension/issues/86 ', async () => {
         await clearField(fieldOldPassword)
         await fieldOldPassword.sendKeys(newPassword.incorrect)
-        await buttonYes.click()
        // await buttonYes.click()
+        await buttonYes.sendKeys(Key.RETURN)
+       // await buttonYes.click()
+        await delay(1000)
         const errors = await driver.findElements(screens.changePassword.error)
         assert.equal(errors.length > 0, true, 'error isn\'t displayed')
         assert.equal(await errors[0].getText(), screens.changePassword.errorText.incorrectPassword, 'Error\'s text incorrect')
@@ -286,7 +293,8 @@ describe('Metamask popup page', async function () {
         await fieldOldPassword.sendKeys(password)
         await fieldNewPassword.sendKeys(newPassword.correct)
         await fieldConfirmNewPassword.sendKeys(newPassword.correct)
-        await buttonYes.click()
+      //  await buttonYes.click()
+        await buttonYes.sendKeys(Key.RETURN)
        // await buttonYes.click()
 
         await driver.wait(until.elementLocated(screens.settings.buttons.changePassword))
@@ -304,7 +312,7 @@ describe('Metamask popup page', async function () {
         await driver.wait(until.elementLocated(menus.sandwich.logOut))
         const itemLogOut = await driver.findElement(menus.sandwich.logOut)
         await driver.wait(until.elementIsVisible(itemLogOut))
-        itemLogOut.click()
+        await itemLogOut.click()
         await driver.wait(until.elementLocated(screens.lock.fieldPassword))
         const fields = await driver.findElements(screens.lock.fieldPassword)
         assert.equal(fields.length, 1, 'password box isn\'t present after logout')
