@@ -133,6 +133,18 @@ module.exports = {
         buttonAddText: 'Add Token'
       },
     },
+    removeToken: {
+      title: By.className('page-subtitle'),
+      titleText: 'Remove Token',
+      label: By.className('confirm-label'),
+      labelText: 'Are you sure you want to remove token',
+      buttons: {
+        back: By.className('fa fa-arrow-left fa-lg cursor-pointer'),
+        no: By.className('btn-violet'),
+        yes: By.css('#app-content > div > div.app-primary.from-right > div > div.flex-column.flex-justify-center.flex-grow.select-none > div > button:nth-child(2)')
+      }
+    },
+
     changePassword: {
       title: By.className('page-subtitle'),
       titleText: 'Change Password',
@@ -162,12 +174,12 @@ module.exports = {
     },
 
     TOU: {
-      agreement:By.className('notice-box'),
+      agreement: By.className('notice-box'),
       titleText: 'Terms of Use',
       title: By.className('terms-header'),
       button: By.css('button'),
-      linkTerms:By.linkText('Terms of Service'),
-      linkTermsText:'Terms of Service'
+      linkTerms: By.linkText('Terms of Service'),
+      linkTermsText: 'Terms of Service'
     },
     create: {
       fieldPassword: By.id('password-box'),

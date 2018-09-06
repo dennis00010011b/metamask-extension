@@ -15,13 +15,13 @@ describe('Metamask popup page', async function () {
   this.timeout(0)
 
   before(async function () {
-    if (process.env.SELENIUM_BROWSER === 'chrome') {
+    if ( process.env.SELENIUM_BROWSER === 'chrome' ) {
       const extPath = path.resolve('dist/chrome')
       driver = buildChromeWebDriver(extPath)
       extensionId = await getExtensionIdChrome(driver)
       await driver.get(`chrome-extension://${extensionId}/popup.html`)
 
-    } else if (process.env.SELENIUM_BROWSER === 'firefox') {
+    } else if ( process.env.SELENIUM_BROWSER === 'firefox' ) {
       const extPath = path.resolve('dist/firefox')
       driver = buildFirefoxWebdriver()
       await installWebExt(driver, extPath)
@@ -34,17 +34,17 @@ describe('Metamask popup page', async function () {
   afterEach(async function () {
     // logs command not supported in firefox
     // https://github.com/SeleniumHQ/selenium/issues/2910
-    if (process.env.SELENIUM_BROWSER === 'chrome') {
+    if ( process.env.SELENIUM_BROWSER === 'chrome' ) {
       // check for console errors
       const errors = await checkBrowserForConsoleErrors()
-      if (errors.length) {
+      if ( errors.length ) {
         const errorReports = errors.map(err => err.message)
         const errorMessage = `Errors found in browser console:\n${errorReports.join('\n')}`
         console.log(errorMessage)
       }
     }
     // gather extra data if test failed
-    if (this.currentTest.state === 'failed') {
+    if ( this.currentTest.state === 'failed' ) {
       await verboseReportOnFailure(this.currentTest)
     }
   })
@@ -78,13 +78,13 @@ describe('Metamask popup page', async function () {
     it('screen \'Terms of Use\' has correct title', async () => {
       const terms = await waitUntilShowUp(screens.TOU.title)
       assert.equal(await terms.getText(), screens.TOU.titleText, 'title is incorrect')
-     })
+    })
 
     it('checks if the TOU contains link \'Terms of service\'', async () => {
       const element = await driver.findElement(screens.TOU.linkTerms)
       await scrollTo(screens.TOU.linkTerms)
-      assert.notEqual(element, null,' link \'Terms of service\' isn\'t present')
-      assert.equal(await element.getText(), screens.TOU.linkTermsText,'incorrect name of link \'Terms of service\'')
+      assert.notEqual(element, null, ' link \'Terms of service\' isn\'t present')
+      assert.equal(await element.getText(), screens.TOU.linkTermsText, 'incorrect name of link \'Terms of service\'')
     })
 
     it('checks if the button \'Accept\' is present and enabled', async () => {
@@ -92,16 +92,16 @@ describe('Metamask popup page', async function () {
       assert.notEqual(button, false, 'button isn\'t present')
       assert.equal(await button.isEnabled(), true, 'button isn\'t enabled')
       await click(button)
-     })
+    })
 
     it('accepts password with length of eight', async () => {
       const passwordBox = await waitUntilShowUp(screens.create.fieldPassword)
-      const passwordBoxConfirm =  await waitUntilShowUp(screens.create.fieldPasswordConfirm)
+      const passwordBoxConfirm = await waitUntilShowUp(screens.create.fieldPasswordConfirm)
       const button = await waitUntilShowUp(screens.create.button)
       await passwordBox.sendKeys(password)
       await passwordBoxConfirm.sendKeys(password)
       await click(button)
-     })
+    })
 
     it('shows vault was created and seed phrase', async () => {
       await delay(300)
@@ -160,7 +160,7 @@ describe('Metamask popup page', async function () {
     it('checks QR code address is the same as account details address', async () => {
       const field = await waitUntilShowUp(screens.QRcode.address)
       const text = await field.getText()
-      assert.equal(text.toLowerCase(), accountAddress.toLowerCase(),'QR addres doesn\'t match')
+      assert.equal(text.toLowerCase(), accountAddress.toLowerCase(), 'QR addres doesn\'t match')
     })
 
     it('close QR code screen by clicking button arrow', async () => {
@@ -185,7 +185,7 @@ describe('Metamask popup page', async function () {
       it('checks if "Change password" button is present and enabled', async () => {
         const menu = await waitUntilShowUp(menus.sandwich.menu)
         await menu.click()
-        const settings =  await waitUntilShowUp(menus.sandwich.settings)
+        const settings = await waitUntilShowUp(menus.sandwich.settings)
         await settings.click()
         await waitUntilShowUp(screens.settings.fieldNewRPC)
         const buttons = await driver.findElements(screens.settings.buttons.changePassword)
@@ -282,7 +282,7 @@ describe('Metamask popup page', async function () {
         await fieldNewPassword.sendKeys(newPassword.correct)
         await fieldConfirmNewPassword.sendKeys(newPassword.correct)
         await click(buttonYes)
-        await waitUntilShowUp(screens.settings.buttons.changePassword,25)
+        await waitUntilShowUp(screens.settings.buttons.changePassword, 25)
         const buttons = await driver.findElements(screens.settings.buttons.changePassword)
         assert.equal(buttons.length, 1, 'Button "Change password" is not present')
         assert.equal(await buttons[0].isEnabled(), true, 'Button "Change password" is disabled')
@@ -381,7 +381,7 @@ describe('Metamask popup page', async function () {
       // check, that imported account is removed
       let menu = await waitUntilShowUp(menus.account.menu)
       await menu.click()
-      await waitUntilShowUp(menus.account.labelImported,25)
+      await waitUntilShowUp(menus.account.labelImported, 25)
       const importedAccounts = await driver.findElements(menus.account.labelImported)
       assert.ok(importedAccounts.length === 0)
       await menu.click()
@@ -396,7 +396,7 @@ describe('Metamask popup page', async function () {
       const logOut = await waitUntilShowUp(menus.sandwich.logOut)
       assert.equal(await logOut.getText(), menus.sandwich.textLogOut)
       await logOut.click()
-     })
+    })
 
     it('restores from seed phrase', async function () {
       const restoreSeedLink = await waitUntilShowUp(screens.lock.linkRestore)
@@ -426,11 +426,11 @@ describe('Metamask popup page', async function () {
       const sendButton = await waitUntilShowUp(screens.main.buttons.send)
       assert.equal(await sendButton.getText(), screens.main.buttons.sendText)
       await click(sendButton)
-     })
+    })
 
     it('adds recipient address and amount', async function () {
       const sendTranscationScreen = await waitUntilShowUp(screens.sendTransaction.title)
-      assert.equal(await sendTranscationScreen.getText(), screens.sendTransaction.titleText,'Transaction screen has incorrect titlr')
+      assert.equal(await sendTranscationScreen.getText(), screens.sendTransaction.titleText, 'Transaction screen has incorrect titlr')
       const inputAddress = await waitUntilShowUp(screens.sendTransaction.fields.address)
       const inputAmmount = await waitUntilShowUp(screens.sendTransaction.fields.amount)
       await inputAddress.sendKeys('0x2f318C334780961FB129D2a6c30D0763d9a5C970')
@@ -496,9 +496,9 @@ describe('Metamask popup page', async function () {
     })
 
     it('navigates back to MetaMask popup in the tab', async function () {
-      if (process.env.SELENIUM_BROWSER === 'chrome') {
+      if ( process.env.SELENIUM_BROWSER === 'chrome' ) {
         await driver.get(`chrome-extension://${extensionId}/popup.html`)
-      } else if (process.env.SELENIUM_BROWSER === 'firefox') {
+      } else if ( process.env.SELENIUM_BROWSER === 'firefox' ) {
         await driver.get(`moz-extension://${extensionId}/popup.html`)
       }
       await delay(700)
@@ -512,7 +512,7 @@ describe('Metamask popup page', async function () {
       const tokensTab = await driver.findElement(screens.main.tokens.menu)
       assert.equal(await tokensTab.getText(), 'Tokens')
       await tokensTab.click()
-     })
+    })
 
     it('navigates to the add token screen', async function () {
       const addTokenButton = await waitUntilShowUp(screens.main.tokens.buttonAdd)
@@ -632,43 +632,49 @@ describe('Metamask popup page', async function () {
   })
 
   describe('Remove Token', function () {
-    it('navigates to the remove token screen and goes back', async function () {
-      // Click to remove first token
+    it('button \'Remove token\' displayed', async function () {
       await setProvider(NETWORKS.LOCALHOST)
-      const removeTokenButton = await driver.findElement(screens.main.tokens.remove)
+      const removeTokenButton = await waitUntilShowUp(screens.main.tokens.remove)
+      assert.notEqual(removeTokenButton, false, 'button isn\'t displayed')
       await removeTokenButton.click()
-      const removeTokenTitle = await driver.findElement(screens.settings.title)
-
-      // Check that the correct page is opened
-      assert.equal(await removeTokenTitle.getText(), 'Remove Token')
-
-      // Go back
-      await delay(500)
-      await driver.findElement(By.className('fa fa-arrow-left fa-lg cursor-pointer')).click()
-
-      await delay(300)
-
-      // Check that the token was not deleted
-      const tokens = await driver.findElements(By.css('#app-content > div > div.app-primary.from-left > div > section > div.full-flex-height > ol > li'))
-      assert.equal(tokens.length, 1, 'There should be 1 token')
+    })
+    it('screen \'Remove token\' has correct title', async function () {
+      const title = await waitUntilShowUp(screens.removeToken.title)
+      assert.equal(await title.getText(), screens.removeToken.titleText, 'title is incorrect')
+    })
+    it('clicking the button "Back" bring back to "Main" screen  ', async function () {
+      const button = await waitUntilShowUp(screens.removeToken.buttons.back)
+      await button.click()
+      const token = await waitUntilShowUp(screens.main.tokens.balance)
+      assert.notEqual(await token.getText(), '', 'token is disaapeared after return from remove token screen ')
     })
 
-    it('navigates to the remove token screen and removes the token from LOCALHOST', async function () {
-      // Click to remove first token
-      const removeTokenButton = await driver.findElement(By.css('#app-content > div > div.app-primary.from-left > div > section > div.full-flex-height > ol > li:nth-child(2) > .trash'))
+    it('button "No" bring back to "Main" screen', async function () {
+      const removeTokenButton = await waitUntilShowUp(screens.main.tokens.remove)
+      assert.notEqual(removeTokenButton, false, 'button isn\'t displayed')
       await removeTokenButton.click()
-      const removeTokenTitle = await driver.findElement(screens.settings.title)
+      const title = await waitUntilShowUp(screens.removeToken.title)
+      assert.equal(await title.getText(), screens.removeToken.titleText, 'title is incorrect')
 
-      // Check that the correct page is opened
-      assert.equal(await removeTokenTitle.getText(), 'Remove Token')
+      const button = await waitUntilShowUp(screens.removeToken.buttons.no)
+      assert.notEqual(button, false, 'button \'No\' isn\'t displayed ')
+      assert.equal(await button.getText(), 'No', 'button \'No\' has incorrect name')
+      await click(button)
+      const token = await waitUntilShowUp(screens.main.tokens.balance)
+      assert.notEqual(await token.getText(), '', 'token is disapeared after return from remove token screen ')
+    })
 
-      // Confirm the removal
-      const confirmRemoveTokenButton = await driver.findElement(By.css('#app-content > div > div.app-primary.from-right > div > div.flex-column.flex-justify-center.flex-grow.select-none > div > button:nth-child(2)'))
-      assert.equal(await confirmRemoveTokenButton.getText(), 'Yes')
-      await confirmRemoveTokenButton.click()
-      await delay(300)
+    it('button "Yes" delete token', async function () {
+      const removeTokenButton = await waitUntilShowUp(screens.main.tokens.remove)
+      assert.notEqual(removeTokenButton, false, 'button isn\'t displayed')
+      await removeTokenButton.click()
+      const title = await waitUntilShowUp(screens.removeToken.title)
+      assert.equal(await title.getText(), screens.removeToken.titleText, 'title is incorrect')
 
-      // Check that the token was deleted
+      const button = await waitUntilShowUp(screens.removeToken.buttons.yes)
+      assert.notEqual(button, false, 'button \'Yes\' isn\'t displayed ')
+      assert.equal(await button.getText(), 'Yes', 'button \'Yes\' has incorrect name')
+      await click(button)
       assert.equal(await assertTokensNotDisplayed(), true, 'tokens are displayed')
     })
 
@@ -815,11 +821,11 @@ describe('Metamask popup page', async function () {
     })
   })
 
-  async function setProvider (network) {
+  async function setProvider(network) {
     const menu = await waitUntilShowUp(screens.main.network)
     await menu.click()
     let counter
-    switch (network) {
+    switch ( network ) {
       case NETWORKS.POA:
         counter = 0
         break
@@ -850,65 +856,63 @@ describe('Metamask popup page', async function () {
     await driver.executeScript("document.getElementsByClassName('dropdown-menu-item')[" + counter + '].click();')
   }
 
-  async function scrollTo(element){
+  async function scrollTo(element) {
     try {
       await driver.executeScript('arguments[0].scrollIntoView();', element)
       return true
     }
-    catch(err)
-    {
+    catch ( err ) {
       return false
     }
   }
 
-  async function click(element){
-    try{
+  async function click(element) {
+    try {
       await element.sendKeys(Key.RETURN)
       return true
     }
-    catch(err)
-    {
-     return false
+    catch ( err ) {
+      return false
     }
   }
 
-  async function clearField (field, number) {
+  async function clearField(field, number) {
     await click(field)
-    if (number === undefined) number = 40
-    for (let i = 0; i < number; i++) {
+    if ( number === undefined ) number = 40
+    for ( let i = 0; i < number; i++ ) {
       await field.sendKeys(Key.BACK_SPACE)
     }
   }
 
-  async function waitUntilDisappear (by, Twait) {
-    if (Twait === undefined) Twait = 10
+  async function waitUntilDisappear(by, Twait) {
+    if ( Twait === undefined ) Twait = 10
     do {
       await delay(100)
-      if (!await isElementDisplayed(by)) return true
+      if ( !await isElementDisplayed(by) ) return true
 
-    } while (Twait-- > 0)
+    } while ( Twait-- > 0 )
     return false
   }
 
-  async function waitUntilShowUp (by, Twait) {
-    if (Twait === undefined) Twait = 200
+  async function waitUntilShowUp(by, Twait) {
+    if ( Twait === undefined ) Twait = 200
     do {
       await delay(100)
-      console.log('wait='+Twait)
-      if (await isElementDisplayed(by)) return await driver.findElement(by)
-    } while (Twait-- > 0)
+      console.log('wait=' + Twait)
+      if ( await isElementDisplayed(by) ) return await driver.findElement(by)
+    } while ( Twait-- > 0 )
     return false
   }
 
-  async function isElementDisplayed (by) {
+  async function isElementDisplayed(by) {
     try {
       return await driver.findElement(by).isDisplayed()
-    } catch (err) {
+    } catch ( err ) {
       return false
     }
   }
 
-  async function assertTokensNotDisplayed () {
+  async function assertTokensNotDisplayed() {
     try {
       await delay(800)
       await waitUntilDisappear(elements.loader)
@@ -921,12 +925,12 @@ describe('Metamask popup page', async function () {
       const tokens = await driver.findElements(screens.main.tokens.token)
       assert.equal(tokens.length, 0, 'Unexpected token presents')
       return true
-    } catch (err) {
+    } catch ( err ) {
       return false
     }
   }
 
-  async function addToken (tokenAddress, tokenName, tokenDecimals) {
+  async function addToken(tokenAddress, tokenName, tokenDecimals) {
     try {
       const button = await waitUntilShowUp(screens.main.tokens.buttonAdd)
       await click(button)
@@ -939,12 +943,12 @@ describe('Metamask popup page', async function () {
       const buttonAdd = await waitUntilShowUp(screens.addToken.buttonAdd)
       await click(buttonAdd)
       return true
-    } catch (err) {
+    } catch ( err ) {
       return false
     }
   }
 
-  async function checkBrowserForConsoleErrors () {
+  async function checkBrowserForConsoleErrors() {
     const ignoredLogTypes = ['WARNING']
     const ignoredErrorMessages = [
       // React throws error warnings on "dataset", but still sets the data-* properties correctly
@@ -964,11 +968,11 @@ describe('Metamask popup page', async function () {
     return matchedErrorObjects
   }
 
-  async function verboseReportOnFailure (test) {
+  async function verboseReportOnFailure(test) {
     let artifactDir
-    if (process.env.SELENIUM_BROWSER === 'chrome') {
+    if ( process.env.SELENIUM_BROWSER === 'chrome' ) {
       artifactDir = `./test-artifacts/chrome/${test.title}`
-    } else if (process.env.SELENIUM_BROWSER === 'firefox') {
+    } else if ( process.env.SELENIUM_BROWSER === 'firefox' ) {
       artifactDir = `./test-artifacts/firefox/${test.title}`
     }
     const filepathBase = `${artifactDir}/test-failure`
