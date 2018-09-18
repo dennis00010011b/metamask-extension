@@ -1015,13 +1015,6 @@ describe('Metamask popup page', async function () {
           assert.notEqual(await tokenBalance.getText(), '')
         })
 
-        it('adds token with  the same address to MAINNET network', async function () {
-          await setProvider(NETWORKS.MAINNET)
-          await addToken(tokenAddress, tokenName, tokenDecimals)
-          const tokenBalance = await waitUntilShowUp(screens.main.tokens.balance)
-          assert.notEqual(await tokenBalance.getText(), '')
-        })
-
         it('adds token with  the same address to ROPSTEN network', async function () {
           await setProvider(NETWORKS.ROPSTEN)
           await addToken(tokenAddress, tokenName, tokenDecimals)
@@ -1038,6 +1031,13 @@ describe('Metamask popup page', async function () {
 
         it('adds token with  the same address to RINKEBY network', async function () {
           await setProvider(NETWORKS.RINKEBY)
+          await addToken(tokenAddress, tokenName, tokenDecimals)
+          const tokenBalance = await waitUntilShowUp(screens.main.tokens.balance)
+          assert.notEqual(await tokenBalance.getText(), '')
+        })
+
+        it('adds token with  the same address to MAINNET network', async function () {
+          await setProvider(NETWORKS.MAINNET)
           await addToken(tokenAddress, tokenName, tokenDecimals)
           const tokenBalance = await waitUntilShowUp(screens.main.tokens.balance)
           assert.notEqual(await tokenBalance.getText(), '')
@@ -1381,14 +1381,12 @@ describe('Metamask popup page', async function () {
     try {
       const button = await waitUntilShowUp(screens.main.tokens.buttonAdd, 300)
       await click(button)
-
       do {
         const tab = await waitUntilShowUp(screens.addToken.tab.custom, 10)
         try {
           await tab.click()
         } catch (err) {
         }
-
       }
       while (await waitUntilShowUp(screens.addToken.custom.fields.contractAddress) === false)
       const field = await waitUntilShowUp(screens.addToken.custom.fields.contractAddress)
