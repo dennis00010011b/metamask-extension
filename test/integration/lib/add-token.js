@@ -65,7 +65,7 @@ async function runAddTokenFlowTest (assert, done) {
   searchInput.focus()
   await timeout(1000)
   nativeInputValueSetter.call(searchInput, 'a')
-  searchInput.dispatchEvent(new Event('input', { bubbles: true}))
+  searchInput.dispatchEvent(new Event('input', { bubbles: true }))
 
   // Click token to add
   const tokenWrapper = await queryAsync($, 'div.token-list__token')
@@ -83,6 +83,7 @@ async function runAddTokenFlowTest (assert, done) {
   const confirmAddToken = await queryAsync($, '.confirm-add-token')
   assert.ok(confirmAddToken[0], 'confirm add token rendered')
   assert.ok($('button.btn-primary.btn--large')[0], 'confirm add token button found')
+  $('button.btn-primary.btn--large')[0].click()
   $('button.btn-primary.btn--large')[0].click()
 
   // Verify added token image
@@ -103,38 +104,52 @@ async function runAddTokenFlowTest (assert, done) {
   addTokenTabs[1].click()
   await timeout(1000)
 
-  // Input token contract address
-  const customInput = (await findAsync(addTokenWrapper, '#custom-address'))[0]
-  customInput.focus()
+  // Input invalid token contract address
+  const customAddress = (await findAsync(addTokenWrapper, '#custom-address'))[0]
+  customAddress.focus()
   await timeout(1000)
-  nativeInputValueSetter.call(customInput, '0x177af043D3A1Aed7cc5f2397C70248Fc6cDC056c')
-  customInput.dispatchEvent(new Event('input', { bubbles: true}))
+  nativeInputValueSetter.call(customAddress, 'invalid address')
+  customAddress.dispatchEvent(new Event('input', { bubbles: true }))
 
+  // Verify contract  error since contract address is invalid
+  const errorMessageContract = await queryAsync($, '#custom-address-helper-text')
+  assert.ok(errorMessageContract[0], 'error rendered')
+
+  // Input token contract address
+  nativeInputValueSetter.call(customAddress, '0x177af043D3A1Aed7cc5f2397C70248Fc6cDC056c')
+  customAddress.dispatchEvent(new Event('input', { bubbles: true }))
+
+  // Verify symbol length error since contract address won't return symbol
+  let errorMessageSymbol = await queryAsync($, '#custom-symbol-helper-text')
+  assert.ok(errorMessageSymbol[0], 'error rendered')
+
+  // Input token symbol with length more than 10
+  const customSymbol = (await findAsync(addTokenWrapper, '#custom-symbol'))[0]
+  customSymbol.focus()
+  await timeout(1000)
+  nativeInputValueSetter.call(customSymbol, 'POAPOAPOA20')
+  customSymbol.dispatchEvent(new Event('input', { bubbles: true }))
+
+  // Verify symbol length error since length more than 10
+  errorMessageSymbol = await queryAsync($, '#custom-symbol-helper-text')
+  assert.ok(errorMessageSymbol[0], 'error rendered')
+
+  // Input valid token symbol
+  nativeInputValueSetter.call(customSymbol, 'POA')
+  customSymbol.dispatchEvent(new Event('input', { bubbles: true }))
 
   // Click Next button
-  // nextButton = await queryAsync($, 'button.btn-primary--lg')
-  // assert.equal(nextButton[0].textContent, 'Next', 'next button rendered')
-  // nextButton[0].click()
+  const nextButtonCustom = await queryAsync($, 'button.btn-primary.btn--large')
+  assert.equal(nextButtonCustom[0].textContent, 'Next', 'next button rendered')
+  nextButtonCustom[0].click()
 
-  // // Verify symbol length error since contract address won't return symbol
-  const errorMessage = await queryAsync($, '#custom-symbol-helper-text')
-  assert.ok(errorMessage[0], 'error rendered')
+  const buttonBack = await queryAsync($, 'button.btn-default.btn--large')
+  buttonBack[0].click()
+  assert.ok(searchInput, 'search screen renders')
+  const buttonCancel = await queryAsync($, 'button.btn-default.btn--large')
+  buttonCancel[0].click()
 
-  $('button.btn-default.btn--large')[0].click()
-
-  // await timeout(100000)
-
-  // Confirm Add token
-  // assert.equal(
-  //   $('.page-container__subtitle')[0].textContent,
-  //   'Would you like to add these tokens?',
-  //   'confirm add token rendered'
-  // )
-  // assert.ok($('button.btn-primary--lg')[0], 'confirm add token button found')
-  // $('button.btn-primary--lg')[0].click()
-
-  // Verify added token image
   heroBalance = await queryAsync($, '.hero-balance')
   assert.ok(heroBalance, 'rendered hero balance')
-  assert.ok(heroBalance.find('.identicon')[0], 'token added')
+  assert.ok(tokenImageUrl.indexOf(heroBalance.find('img').attr('src')) > -1, 'token added')
 }
