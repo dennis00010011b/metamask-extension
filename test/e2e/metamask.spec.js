@@ -1286,7 +1286,7 @@ describe('Nifty wallet popup page', async function () {
       do {
         await delay(500)
         console.log(await driver.getCurrentUrl())
-        if (await driver.getCurrentUrl() !== '') return true
+        if (await driver.getCurrentUrl() !== 'about:blank') return true
       }
       while (counter-- > 0)
       return true
@@ -1303,7 +1303,7 @@ describe('Nifty wallet popup page', async function () {
       do {
         await delay(500)
         console.log(await driver.getCurrentUrl())
-        if (await driver.getCurrentUrl() !== '') return true
+        if (await driver.getCurrentUrl() !== 'about:blank') return true
       }
       while (counter-- > 0)
       return true
