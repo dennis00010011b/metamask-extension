@@ -1275,6 +1275,7 @@ describe('Metamask popup page', async function () {
         assert.equal(await symbol.getText(), 'TST', ' symbol is incorrect')
       })
 
+
       it('submit transaction', async function () {
         await driver.navigate().refresh()
         const button = await waitUntilShowUp(screens.confirmTransaction.button.submit)
