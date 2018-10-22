@@ -585,6 +585,7 @@ describe('Metamask popup page', async function () {
     })
 
 
+
     it('adds recipient address and amount', async function () {
       const sendTranscationScreen = await waitUntilShowUp(screens.sendTransaction.title)
       assert.equal(await sendTranscationScreen.getText(), screens.sendTransaction.titleText, 'Transaction screen has incorrect titlr')
