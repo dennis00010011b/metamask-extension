@@ -3,12 +3,16 @@ const Component = require('react').Component
 const h = require('react-hyperscript')
 const connect = require('react-redux').connect
 const actions = require('../../ui/app/actions')
+const url = require('url')
+const http = require('http')
+const https = require('https')
 const infuraCurrencies = require('./infura-conversion.json').objects.sort((a, b) => {
       return a.quote.name.toLocaleLowerCase().localeCompare(b.quote.name.toLocaleLowerCase())
     })
 const validUrl = require('valid-url')
 const exportAsFile = require('./util').exportAsFile
 const Modal = require('../../ui/app/components/modals/index').Modal
+const ethNetProps = require('eth-net-props')
 
 module.exports = connect(mapStateToProps)(ConfigScreen)
 
@@ -191,10 +195,6 @@ ConfigScreen.prototype.render = function () {
               },
             }, [
               'Resetting is for developer use only. ',
-              h('a', {
-                href: 'http://metamask.helpscoutdocs.com/article/36-resetting-an-account',
-                target: '_blank',
-              }, 'Read more.'),
             ]),
             h('br'),
 
@@ -207,17 +207,47 @@ ConfigScreen.prototype.render = function () {
                 state.dispatch(actions.resetAccount())
               },
             }, 'Reset Account'),
-          ]),
 
+            h('hr.horizontal-line', {
+              style: {
+                marginTop: '20px',
+              },
+            }),
+
+            h('button', {
+              style: {
+                alignSelf: 'center',
+              },
+              onClick (event) {
+                event.preventDefault()
+                state.dispatch(actions.confirmChangePassword())
+              },
+            }, 'Change password'),
+          ]),
         ]),
       ]),
     ])
   )
 }
 
+ConfigScreen.prototype.componentWillUnmount = function () {
+  this.props.dispatch(actions.displayWarning(''))
+}
+
 function rpcValidation (newRpc, state) {
   if (validUrl.isWebUri(newRpc)) {
-    state.dispatch(actions.setRpcTarget(newRpc))
+    const rpc = url.parse(newRpc)
+    const protocolName = rpc.protocol.replace(/:/g, '')
+    const protocol = protocolName === 'https' ? https : http
+    const options = {method: 'GET', host: rpc.hostname, port: rpc.port, path: rpc.pathname}
+    const req = protocol.request(options)
+    .on('response', () => {
+      state.dispatch(actions.setRpcTarget(newRpc))
+    })
+    .on('error', () => {
+      state.dispatch(actions.displayWarning('Invalid RPC endpoint'))
+    })
+    req.end()
   } else {
     var appendedRpc = `http://${newRpc}`
     if (validUrl.isWebUri(appendedRpc)) {
@@ -257,32 +287,37 @@ function currentProviderDisplay (metamaskState, state) {
 
     case 'mainnet':
       title = 'Current Network'
-      value = 'Main Ethereum Network'
+      value = ethNetProps.props.getNetworkDisplayName(1)
       break
 
     case 'sokol':
       title = 'Current Network'
-      value = 'POA Sokol Test Network'
+      value = ethNetProps.props.getNetworkDisplayName(77)
       break
 
     case 'ropsten':
       title = 'Current Network'
-      value = 'Ropsten Test Network'
+      value = ethNetProps.props.getNetworkDisplayName(3)
       break
 
     case 'kovan':
       title = 'Current Network'
-      value = 'Kovan Test Network'
+      value = ethNetProps.props.getNetworkDisplayName(42)
       break
 
     case 'rinkeby':
       title = 'Current Network'
-      value = 'Rinkeby Test Network'
+      value = ethNetProps.props.getNetworkDisplayName(4)
       break
 
     case 'poa':
       title = 'Current Network'
-      value = 'POA Network'
+      value = ethNetProps.props.getNetworkDisplayName(99)
+      break
+
+    case 'dai':
+      title = 'Current Network'
+      value = ethNetProps.props.getNetworkDisplayName(100)
       break
 
     default:

@@ -10,8 +10,8 @@ const {
 const ethUtil = require('ethereumjs-util')
 const { fetchLocale } = require('../i18n-helper')
 const log = require('loglevel')
-const { ENVIRONMENT_TYPE_NOTIFICATION } = require('../../app/scripts/lib/enums')
 const { hasUnconfirmedTransactions } = require('./helpers/confirm-transaction/util')
+const WebcamUtils = require('../lib/webcam-utils')
 
 var actions = {
   _setBackgroundConnection: _setBackgroundConnection,
@@ -33,6 +33,8 @@ var actions = {
   ALERT_CLOSE: 'UI_ALERT_CLOSE',
   showAlert: showAlert,
   hideAlert: hideAlert,
+  QR_CODE_DETECTED: 'UI_QR_CODE_DETECTED',
+  qrCodeDetected,
   // network dropdown open
   NETWORK_DROPDOWN_OPEN: 'UI_NETWORK_DROPDOWN_OPEN',
   NETWORK_DROPDOWN_CLOSE: 'UI_NETWORK_DROPDOWN_CLOSE',
@@ -88,10 +90,11 @@ var actions = {
   connectHardware,
   checkHardwareStatus,
   forgetDevice,
-  unlockTrezorAccount,
+  unlockHardwareWalletAccount,
   NEW_ACCOUNT_SCREEN: 'NEW_ACCOUNT_SCREEN',
   navigateToNewAccountScreen,
   resetAccount,
+  changePassword,
   removeAccount,
   showNewVaultSeed: showNewVaultSeed,
   showInfoPage: showInfoPage,
@@ -125,7 +128,8 @@ var actions = {
   SHOW_CONF_TX_PAGE: 'SHOW_CONF_TX_PAGE',
   SHOW_CONF_MSG_PAGE: 'SHOW_CONF_MSG_PAGE',
   SET_CURRENT_FIAT: 'SET_CURRENT_FIAT',
-  setCurrentCurrency: setCurrentCurrency,
+  showQrScanner,
+  setCurrentCurrency,
   setCurrentAccountTab,
   // account detail screen
   SHOW_SEND_PAGE: 'SHOW_SEND_PAGE',
@@ -143,6 +147,8 @@ var actions = {
   exportAccountComplete,
   SET_ACCOUNT_LABEL: 'SET_ACCOUNT_LABEL',
   setAccountLabel,
+  updateNetworkNonce,
+  SET_NETWORK_NONCE: 'SET_NETWORK_NONCE',
   // tx conf screen
   COMPLETED_TX: 'COMPLETED_TX',
   TRANSACTION_ERROR: 'TRANSACTION_ERROR',
@@ -221,8 +227,10 @@ var actions = {
   SET_PROVIDER_TYPE: 'SET_PROVIDER_TYPE',
   showConfigPage,
   SHOW_ADD_TOKEN_PAGE: 'SHOW_ADD_TOKEN_PAGE',
+  SHOW_CONFIRM_ADD_TOKEN_PAGE: 'SHOW_CONFIRM_ADD_TOKEN_PAGE',
   SHOW_REMOVE_TOKEN_PAGE: 'SHOW_REMOVE_TOKEN_PAGE',
   showAddTokenPage,
+  showConfirmAddTokensPage,
   showRemoveTokenPage,
   addToken,
   addTokens,
@@ -231,6 +239,8 @@ var actions = {
   UPDATE_TOKENS: 'UPDATE_TOKENS',
   setRpcTarget: setRpcTarget,
   setProviderType: setProviderType,
+  SET_HARDWARE_WALLET_DEFAULT_HD_PATH: 'SET_HARDWARE_WALLET_DEFAULT_HD_PATH',
+  setHardwareWalletDefaultHdPath,
   updateProviderType,
   // loading overlay
   SHOW_LOADING: 'SHOW_LOADING_INDICATION',
@@ -311,6 +321,8 @@ var actions = {
   removeCustomRPC,
   SHOW_DELETE_IMPORTED_ACCOUNT: 'SHOW_DELETE_IMPORTED_ACCOUNT',
   showDeleteImportedAccount,
+  CONFIRM_CHANGE_PASSWORD: 'CONFIRM_CHANGE_PASSWORD',
+  confirmChangePassword,
 }
 
 module.exports = actions
@@ -346,6 +358,10 @@ function tryUnlockMetamask (password) {
       .then(() => {
         dispatch(actions.unlockSucceeded())
         return forceUpdateMetamaskState(dispatch)
+      })
+      .catch((err) => {
+        log.error(err)
+        return Promise.reject(err)
       })
       .then(() => {
         return new Promise((resolve, reject) => {
@@ -496,7 +512,7 @@ function requestRevealSeed (password) {
     return new Promise((resolve, reject) => {
       background.submitPassword(password, err => {
         if (err) {
-          dispatch(actions.displayWarning(err.message))
+          dispatch(actions.displayWarning(err))
           return reject(err)
         }
 
@@ -513,6 +529,10 @@ function requestRevealSeed (password) {
         })
       })
     })
+      .catch((err) => {
+        dispatch(actions.displayWarning(err.message))
+        return Promise.reject(err)
+      })
   }
 }
 
@@ -547,6 +567,25 @@ function resetAccount () {
         }
 
         log.info('Transaction history reset for ' + account)
+        dispatch(actions.showAccountsPage())
+        resolve(account)
+      })
+    })
+  }
+}
+
+function changePassword (oldPassword, newPassword) {
+  return dispatch => {
+    dispatch(actions.showLoadingIndication())
+
+    return new Promise((resolve, reject) => {
+      background.changePassword(oldPassword, newPassword, (err, account) => {
+        dispatch(actions.hideLoadingIndication())
+        if (err) {
+          log.error(err)
+          return reject(err)
+        }
+        log.info('Password is changed for ' + account)
         dispatch(actions.showAccountsPage())
         resolve(account)
       })
@@ -640,12 +679,12 @@ function addNewAccount () {
   }
 }
 
-function checkHardwareStatus (deviceName) {
-  log.debug(`background.checkHardwareStatus`, deviceName)
+function checkHardwareStatus (deviceName, hdPath) {
+  log.debug(`background.checkHardwareStatus`, deviceName, hdPath)
   return (dispatch, getState) => {
     dispatch(actions.showLoadingIndication())
     return new Promise((resolve, reject) => {
-      background.checkHardwareStatus(deviceName, (err, unlocked) => {
+      background.checkHardwareStatus(deviceName, hdPath, (err, unlocked) => {
         if (err) {
           log.error(err)
           dispatch(actions.displayWarning(err.message))
@@ -682,12 +721,12 @@ function forgetDevice (deviceName) {
   }
 }
 
-function connectHardware (deviceName, page) {
-  log.debug(`background.connectHardware`, deviceName, page)
+function connectHardware (deviceName, page, hdPath) {
+  log.debug(`background.connectHardware`, deviceName, page, hdPath)
   return (dispatch, getState) => {
     dispatch(actions.showLoadingIndication())
     return new Promise((resolve, reject) => {
-      background.connectHardware(deviceName, page, (err, accounts) => {
+      background.connectHardware(deviceName, page, hdPath, (err, accounts) => {
         if (err) {
           log.error(err)
           dispatch(actions.displayWarning(err.message))
@@ -703,12 +742,12 @@ function connectHardware (deviceName, page) {
   }
 }
 
-function unlockTrezorAccount (index) {
-  log.debug(`background.unlockTrezorAccount`, index)
+function unlockHardwareWalletAccount (index, deviceName, hdPath) {
+  log.debug(`background.unlockHardwareWalletAccount`, index, deviceName, hdPath)
   return (dispatch, getState) => {
     dispatch(actions.showLoadingIndication())
     return new Promise((resolve, reject) => {
-      background.unlockTrezorAccount(index, (err, accounts) => {
+      background.unlockHardwareWalletAccount(index, deviceName, hdPath, (err, accounts) => {
         if (err) {
           log.error(err)
           dispatch(actions.displayWarning(err.message))
@@ -725,6 +764,28 @@ function unlockTrezorAccount (index) {
 function showInfoPage () {
   return {
     type: actions.SHOW_INFO_PAGE,
+  }
+}
+
+function showQrScanner (ROUTE) {
+  return (dispatch, getState) => {
+    return WebcamUtils.checkStatus()
+    .then(status => {
+      if (!status.environmentReady) {
+         // We need to switch to fullscreen mode to ask for permission
+         global.platform.openExtensionInBrowser(`${ROUTE}`, `scan=true`)
+      } else {
+        dispatch(actions.showModal({
+          name: 'QR_SCANNER',
+        }))
+      }
+    }).catch(e => {
+      dispatch(actions.showModal({
+        name: 'QR_SCANNER',
+        error: true,
+        errorType: e.type,
+      }))
+    })
   }
 }
 
@@ -770,9 +831,8 @@ function signMsg (msgData) {
 
         dispatch(actions.completedTx(msgData.metamaskId))
 
-        if (global.METAMASK_UI_TYPE === ENVIRONMENT_TYPE_NOTIFICATION &&
-          !hasUnconfirmedTransactions(getState())) {
-          return global.platform.closeCurrentWindow()
+        if (!hasUnconfirmedTransactions(getState())) {
+          return global.platform.closeNotificationWindow()
         }
 
         return resolve(msgData)
@@ -801,9 +861,8 @@ function signPersonalMsg (msgData) {
 
         dispatch(actions.completedTx(msgData.metamaskId))
 
-        if (global.METAMASK_UI_TYPE === ENVIRONMENT_TYPE_NOTIFICATION &&
-          !hasUnconfirmedTransactions(getState())) {
-          return global.platform.closeCurrentWindow()
+        if (!hasUnconfirmedTransactions(getState())) {
+          return global.platform.closeNotificationWindow()
         }
 
         return resolve(msgData)
@@ -832,9 +891,8 @@ function signTypedMsg (msgData) {
 
         dispatch(actions.completedTx(msgData.metamaskId))
 
-        if (global.METAMASK_UI_TYPE === ENVIRONMENT_TYPE_NOTIFICATION &&
-          !hasUnconfirmedTransactions(getState())) {
-          return global.platform.closeCurrentWindow()
+        if (!hasUnconfirmedTransactions(getState())) {
+          return global.platform.closeNotificationWindow()
         }
 
         return resolve(msgData)
@@ -1039,15 +1097,14 @@ function sendTx (txData) {
       }
       dispatch(actions.completedTx(txData.id))
 
-      if (global.METAMASK_UI_TYPE === ENVIRONMENT_TYPE_NOTIFICATION &&
-        !hasUnconfirmedTransactions(getState())) {
-        return global.platform.closeCurrentWindow()
+      if (!hasUnconfirmedTransactions(getState())) {
+        return global.platform.closeNotificationWindow()
       }
     })
   }
 }
 
-function signTokenTx (tokenAddress, toAddress, amount, txData) {
+function signTokenTx (tokenAddress, toAddress, amount, txData, confTxScreenParams) {
   return dispatch => {
     dispatch(actions.showLoadingIndication())
     const token = global.eth.contract(abi).at(tokenAddress)
@@ -1056,7 +1113,7 @@ function signTokenTx (tokenAddress, toAddress, amount, txData) {
         dispatch(actions.hideLoadingIndication())
         dispatch(actions.displayWarning(err.message))
       })
-    dispatch(actions.showConfTxPage({}))
+    dispatch(actions.showConfTxPage(confTxScreenParams || {}))
   }
 }
 
@@ -1082,7 +1139,7 @@ function updateTransaction (txData) {
     .then(() => updateMetamaskStateFromBackground())
     .then(newState => dispatch(actions.updateMetamaskState(newState)))
     .then(() => {
-        dispatch(actions.showConfTxPage({ id: txData.id }))
+        dispatch(actions.showConfTxPage({ id: txData.id}))
         dispatch(actions.hideLoadingIndication())
         return txData
       })
@@ -1116,10 +1173,10 @@ function updateAndApproveTx (txData) {
         dispatch(actions.clearSend())
         dispatch(actions.completedTx(txData.id))
         dispatch(actions.hideLoadingIndication())
+        dispatch(actions.setCurrentAccountTab('history'))
 
-        if (global.METAMASK_UI_TYPE === ENVIRONMENT_TYPE_NOTIFICATION &&
-          !hasUnconfirmedTransactions(getState())) {
-          return global.platform.closeCurrentWindow()
+        if (!hasUnconfirmedTransactions(getState())) {
+          return global.platform.closeNotificationWindow()
         }
 
         return txData
@@ -1165,9 +1222,8 @@ function cancelMsg (msgData) {
 
         dispatch(actions.completedTx(msgData.id))
 
-        if (global.METAMASK_UI_TYPE === ENVIRONMENT_TYPE_NOTIFICATION &&
-          !hasUnconfirmedTransactions(getState())) {
-          return global.platform.closeCurrentWindow()
+        if (!hasUnconfirmedTransactions(getState())) {
+          return global.platform.closeNotificationWindow()
         }
 
         return resolve(msgData)
@@ -1192,9 +1248,8 @@ function cancelPersonalMsg (msgData) {
 
         dispatch(actions.completedTx(id))
 
-        if (global.METAMASK_UI_TYPE === ENVIRONMENT_TYPE_NOTIFICATION &&
-          !hasUnconfirmedTransactions(getState())) {
-          return global.platform.closeCurrentWindow()
+        if (!hasUnconfirmedTransactions(getState())) {
+          return global.platform.closeNotificationWindow()
         }
 
         return resolve(msgData)
@@ -1219,9 +1274,8 @@ function cancelTypedMsg (msgData) {
 
         dispatch(actions.completedTx(id))
 
-        if (global.METAMASK_UI_TYPE === ENVIRONMENT_TYPE_NOTIFICATION &&
-          !hasUnconfirmedTransactions(getState())) {
-          return global.platform.closeCurrentWindow()
+        if (!hasUnconfirmedTransactions(getState())) {
+          return global.platform.closeNotificationWindow()
         }
 
         return resolve(msgData)
@@ -1251,9 +1305,8 @@ function cancelTx (txData) {
         dispatch(actions.completedTx(txData.id))
         dispatch(actions.hideLoadingIndication())
 
-        if (global.METAMASK_UI_TYPE === ENVIRONMENT_TYPE_NOTIFICATION &&
-          !hasUnconfirmedTransactions(getState())) {
-          return global.platform.closeCurrentWindow()
+        if (!hasUnconfirmedTransactions(getState())) {
+          return global.platform.closeNotificationWindow()
         }
 
         return txData
@@ -1266,7 +1319,10 @@ function cancelAllTx (txsData) {
     txsData.forEach((txData, i) => {
       background.cancelTransaction(txData.id, () => {
         dispatch(actions.completedTx(txData.id))
-        i === txsData.length - 1 ? dispatch(actions.goHome()) : null
+        if (i === txsData.length - 1) {
+          dispatch(actions.goHome())
+          global.platform.closeNotificationWindow()
+        }
       })
     })
   }
@@ -1490,11 +1546,12 @@ function showAccountDetail (address) {
   return (dispatch) => {
     dispatch(actions.showLoadingIndication())
     log.debug(`background.setSelectedAddress`)
-    background.setSelectedAddress(address, (err) => {
+    background.setSelectedAddress(address, (err, tokens) => {
       dispatch(actions.hideLoadingIndication())
       if (err) {
         return dispatch(actions.displayWarning(err.message))
       }
+      dispatch(updateTokens(tokens))
       dispatch({
         type: actions.SHOW_ACCOUNT_DETAIL,
         value: address,
@@ -1517,11 +1574,12 @@ function showAccountsPage () {
   }
 }
 
-function showConfTxPage ({transForward = true, id}) {
+function showConfTxPage (screenParams) {
   return {
     type: actions.SHOW_CONF_TX_PAGE,
-    transForward,
-    id,
+    transForward: (screenParams.transForward || true),
+    id: screenParams.id,
+    value: screenParams,
   }
 }
 
@@ -1565,6 +1623,13 @@ function showAddTokenPage (transitionForward = true) {
   }
 }
 
+function showConfirmAddTokensPage (transitionForward = true) {
+  return {
+    type: actions.SHOW_CONFIRM_ADD_TOKEN_PAGE,
+    value: transitionForward,
+  }
+}
+
 function showRemoveTokenPage (token, transitionForward = true) {
   return {
     type: actions.SHOW_REMOVE_TOKEN_PAGE,
@@ -1573,11 +1638,11 @@ function showRemoveTokenPage (token, transitionForward = true) {
   }
 }
 
-function addToken (address, symbol, decimals) {
+function addToken (address, symbol, decimals, network) {
   return (dispatch) => {
     dispatch(actions.showLoadingIndication())
     return new Promise((resolve, reject) => {
-      background.addToken(address, symbol, decimals, (err, tokens) => {
+      background.addToken(address, symbol, decimals, network, (err, tokens) => {
         dispatch(actions.hideLoadingIndication())
         if (err) {
           dispatch(actions.displayWarning(err.message))
@@ -1611,16 +1676,16 @@ function addTokens (tokens) {
   return dispatch => {
     if (Array.isArray(tokens)) {
       dispatch(actions.setSelectedToken(getTokenAddressFromTokenObject(tokens[0])))
-      return Promise.all(tokens.map(({ address, symbol, decimals }) => (
-        dispatch(addToken(address, symbol, decimals))
+      return Promise.all(tokens.map(({ address, symbol, decimals, network }) => (
+        dispatch(addToken(address, symbol, decimals, network))
       )))
     } else {
       dispatch(actions.setSelectedToken(getTokenAddressFromTokenObject(tokens)))
       return Promise.all(
         Object
         .entries(tokens)
-        .map(([_, { address, symbol, decimals }]) => (
-          dispatch(addToken(address, symbol, decimals))
+        .map(([_, { address, symbol, decimals, network }]) => (
+          dispatch(addToken(address, symbol, decimals, network))
         ))
       )
     }
@@ -1652,7 +1717,7 @@ function markNoticeRead (notice) {
       background.markNoticeRead(notice, (err, notice) => {
         dispatch(actions.hideLoadingIndication())
         if (err) {
-          dispatch(actions.displayWarning(err))
+          dispatch(actions.displayWarning(err.message))
           return reject(err)
         }
 
@@ -1725,7 +1790,7 @@ function setProviderType (type) {
       dispatch(actions.setSelectedToken())
     })
 
-    const newCoin = type === 'poa' || type === 'sokol' ? 'poa' : 'eth'
+    const newCoin = type === 'poa' || type === 'sokol' ? 'poa' : type === 'dai' ? 'dai' : 'eth'
     background.setCurrentCoin(newCoin, (err, data) => {
       if (err) {
         log.error(err.stack)
@@ -1759,6 +1824,7 @@ function setRpcTarget (newRpc) {
         log.error(err)
         return dispatch(self.displayWarning('Had a problem changing networks!'))
       }
+      dispatch(actions.displayWarning(''))
       dispatch(actions.setSelectedToken())
     })
   }
@@ -1837,12 +1903,30 @@ function hideAlert () {
   }
 }
 
+/**
+ * This action will receive two types of values via qrCodeData
+ * an object with the following structure {type, values}
+ * or null (used to clear the previous value)
+ */
+function qrCodeDetected (qrCodeData) {
+  return {
+    type: actions.QR_CODE_DETECTED,
+    value: qrCodeData,
+  }
+}
 
 function showLoadingIndication (message) {
   return {
     type: actions.SHOW_LOADING,
     value: message,
   }
+}
+
+function setHardwareWalletDefaultHdPath ({ device, path }) {
+    return {
+      type: actions.SET_HARDWARE_WALLET_DEFAULT_HD_PATH,
+      value: {device, path},
+    }
 }
 
 function hideLoadingIndication () {
@@ -1961,9 +2045,11 @@ function showSendPage () {
   }
 }
 
-function showSendTokenPage () {
+
+function showSendTokenPage (address) {
   return {
     type: actions.SHOW_SEND_TOKEN_PAGE,
+    value: address,
   }
 }
 
@@ -2146,6 +2232,24 @@ function updateFeatureFlags (updatedFeatureFlags) {
   }
 }
 
+function setNetworkNonce (networkNonce) {
+  return {
+    type: actions.SET_NETWORK_NONCE,
+    value: networkNonce,
+  }
+}
+
+function updateNetworkNonce (address) {
+  return (dispatch) => {
+    return new Promise((resolve, reject) => {
+      global.ethQuery.getTransactionCount(address, (err, data) => {
+        dispatch(setNetworkNonce(data))
+        resolve(data)
+      })
+    })
+  }
+}
+
 function setMouseUserState (isMouseUser) {
   return {
     type: actions.SET_MOUSE_USER_STATE,
@@ -2263,9 +2367,12 @@ function updateNetworkEndpointType (networkEndpointType) {
 }
 
 function setPendingTokens (pendingTokens) {
-  const { customToken = {}, selectedTokens = {} } = pendingTokens
-  const { address, symbol, decimals } = customToken
-  const tokens = address && symbol && decimals
+  const { selectedTokens = {}, customToken = {} } = pendingTokens
+  const { address, symbol, decimals, network } = customToken
+  Object.keys(selectedTokens).forEach(address => {
+    selectedTokens[address].network = parseInt(network)
+  })
+  const tokens = address && symbol && decimals && network
     ? { ...selectedTokens, [address]: { ...customToken, isCustom: true } }
     : selectedTokens
 
@@ -2313,5 +2420,11 @@ function showDeleteImportedAccount (identity, keyring) {
     type: actions.SHOW_DELETE_IMPORTED_ACCOUNT,
     identity,
     keyring,
+  }
+}
+
+function confirmChangePassword () {
+  return {
+    type: actions.CONFIRM_CHANGE_PASSWORD,
   }
 }

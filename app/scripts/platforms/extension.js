@@ -20,12 +20,38 @@ class ExtensionPlatform {
     })
   }
 
+  /**
+   * Closes all notifications windows, when action is confirmed in popup
+   * or closes notification window itself, when action is confirmed from it
+   */
+  closeNotificationWindow () {
+    return extension.windows.getCurrent((curWindowsDetails) => {
+      if (curWindowsDetails.type === 'popup') {
+        return extension.windows.remove(curWindowsDetails.id)
+      } else {
+        extension.windows.getAll((windowsDetails) => {
+          const windowsDetailsFiltered = windowsDetails.filter((windowDetails) => windowDetails.id !== curWindowsDetails.id)
+          return windowsDetailsFiltered.forEach((windowDetails) => {
+            if (windowDetails.type === 'popup') {
+              extension.windows.remove(windowDetails.id)
+            }
+          })
+        })
+      }
+    })
+  }
+
   getVersion () {
     return extension.runtime.getManifest().version
   }
 
-  openExtensionInBrowser (route = null) {
+  openExtensionInBrowser (route = null, queryString = null) {
     let extensionURL = extension.runtime.getURL('home.html')
+
+    if (queryString) {
+      extensionURL += `?${queryString}`
+    }
+
     if (route) {
       extensionURL += `#${route}`
     }

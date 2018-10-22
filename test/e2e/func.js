@@ -5,7 +5,8 @@ const os = require('os')
 const path = require('path')
 const webdriver = require('selenium-webdriver')
 const Command = require('selenium-webdriver/lib/command').Command
-const By = webdriver.By
+
+const { By } = webdriver
 
 module.exports = {
   delay,
@@ -59,5 +60,5 @@ async function installWebExt (driver, extension) {
   await driver.getExecutor()
     .defineCommand(cmd.getName(), 'POST', '/session/:sessionId/moz/addon/install')
 
-  return await driver.schedule(cmd, 'installWebExt(' + extension + ')')
+  return await driver.execute(cmd, 'installWebExt(' + extension + ')')
 }

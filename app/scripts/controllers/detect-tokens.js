@@ -50,7 +50,7 @@ class DetectTokensController {
     ethContract.balanceOf(this.selectedAddress, (error, result) => {
       if (!error) {
         if (!result.isZero()) {
-          this._preferences.addToken(contractAddress, contracts[contractAddress].symbol, contracts[contractAddress].decimals)
+          this._preferences.addToken(contractAddress, contracts[contractAddress].symbol, contracts[contractAddress].decimals, this.network)
         }
       } else {
         warn(`MetaMask - DetectTokensController balance fetch failed for ${contractAddress}.`, error)
@@ -85,7 +85,7 @@ class DetectTokensController {
   set preferences (preferences) {
     if (!preferences) { return }
     this._preferences = preferences
-    preferences.store.subscribe(({ tokens }) => { this.tokenAddresses = tokens.map((obj) => { return obj.address }) })
+    preferences.store.subscribe(({ tokens = [] }) => { this.tokenAddresses = tokens.map((obj) => { return obj.address }) })
     preferences.store.subscribe(({ selectedAddress }) => {
       if (this.selectedAddress !== selectedAddress) {
         this.selectedAddress = selectedAddress

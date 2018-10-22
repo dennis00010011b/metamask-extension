@@ -44,8 +44,8 @@ const notificationManager = new NotificationManager()
 global.METAMASK_NOTIFIER = notificationManager
 
 // setup sentry error reporting
-const releaseVersion = platform.getVersion()
-const raven = setupRaven({ releaseVersion })
+const release = platform.getVersion()
+const raven = setupRaven({ release })
 
 // browser check if it is Edge - https://stackoverflow.com/questions/9847580/how-to-detect-safari-chrome-ie-firefox-and-opera-browser
 // Internet Explorer 6-11
@@ -434,7 +434,13 @@ function setupController (initState, initLangCode) {
 function triggerUi () {
   extension.tabs.query({ active: true }, tabs => {
     const currentlyActiveMetamaskTab = Boolean(tabs.find(tab => openMetamaskTabsIDs[tab.id]))
-    if (!popupIsOpen && !currentlyActiveMetamaskTab && !notificationIsOpen) {
+    /**
+     * https://github.com/poanetwork/metamask-extension/issues/19
+     * !notificationIsOpen was removed from the check, because notification can be opened, but it can be behind the DApp
+     * for some reasons. For example, if notification popup was opened, but user moved focus to DApp.
+     * New transaction, in this case, will not appear in front of DApp.
+     */
+    if (!popupIsOpen && !currentlyActiveMetamaskTab) {
       notificationManager.showPopup()
     }
   })
