@@ -92,7 +92,7 @@ workflows:
 jobs:
   prep-deps-npm:
     docker:
-    - image: circleci/node:8.12.0-browsers
+    - image: circleci/node:8.12.0
     steps:
     - checkout
     - restore_cache:
