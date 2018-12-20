@@ -92,7 +92,7 @@ workflows:
 jobs:
   prep-deps-npm:
     docker:
-    - image: circleci/node:8.12.0
+    - image: circleci/node:8.12.0-browsers
     steps:
     - checkout
     - restore_cache:
@@ -110,6 +110,8 @@ jobs:
           sudo dpkg -i google-chrome.deb
           sudo sed -i 's|HERE/chrome"|HERE/chrome" --no-sandbox|g' /opt/google/chrome/google-chrome
           rm google-chrome.deb
+          chrome -v
+          whereis chrome
     - save_cache:
         key: dependency-cache-{{ .Revision }}
         paths:
