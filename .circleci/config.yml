@@ -101,6 +101,15 @@ jobs:
         name: Install npm 6 + deps via npm
         command: |
           sudo npm install -g npm@6.4.1 && npm install --no-save
+    - run:
+        name: Install Chromedriver latest version
+        command: |
+          sudo apt-get update
+          sudo apt-get install lsb-release
+          curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo dpkg -i google-chrome.deb
+          sudo sed -i ‘s|~/chrome"|~/chrome" --disable-setuid-sandbox|g’ /opt/google/chrome/google-chrome
+          rm google-chrome.deb
     - save_cache:
         key: dependency-cache-{{ .Revision }}
         paths:
