@@ -92,7 +92,7 @@ workflows:
 jobs:
   prep-deps-npm:
     docker:
-    - image: circleci/node:8.12.0-browsers
+    - image: circleci/node:8.12.0
     steps:
     - checkout
     - restore_cache:
@@ -108,7 +108,6 @@ jobs:
           sudo apt-get install lsb-release
           curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo dpkg -i google-chrome.deb
-          sudo sed -i ‘s|~/chrome"|~/chrome" --disable-setuid-sandbox|g’ /opt/google/chrome/google-chrome
           rm google-chrome.deb
     - save_cache:
         key: dependency-cache-{{ .Revision }}
