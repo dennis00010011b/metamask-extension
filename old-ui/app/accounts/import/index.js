@@ -8,10 +8,12 @@ import Select from 'react-select'
 // Subviews
 const JsonImportView = require('./json.js')
 const PrivateKeyImportView = require('./private-key.js')
+const ContractImportView = require('./contract.js')
 
 const menuItems = [
   'Private Key',
   'JSON File',
+  'Contract',
 ]
 
 module.exports = connect(mapStateToProps)(AccountImportSubview)
@@ -111,6 +113,10 @@ AccountImportSubview.prototype.render = function () {
   )
 }
 
+AccountImportSubview.prototype.componentWillUnmount = function () {
+  this.props.dispatch(actions.displayWarning(''))
+}
+
 AccountImportSubview.prototype.renderImportView = function () {
   const props = this.props
   const state = this.state || {}
@@ -123,6 +129,8 @@ AccountImportSubview.prototype.renderImportView = function () {
       return h(PrivateKeyImportView)
     case 'JSON File':
       return h(JsonImportView)
+    case 'Contract':
+      return h(ContractImportView)
     default:
       return h(JsonImportView)
   }

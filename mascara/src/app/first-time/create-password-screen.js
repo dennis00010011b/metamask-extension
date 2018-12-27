@@ -6,7 +6,6 @@ import { compose } from 'recompose'
 import { createNewVaultAndKeychain } from '../../../../ui/app/actions'
 import Breadcrumbs from './breadcrumbs'
 import EventEmitter from 'events'
-import Mascot from '../../../../ui/app/components/mascot'
 import classnames from 'classnames'
 import {
   INITIALIZE_UNIQUE_IMAGE_ROUTE,
@@ -63,7 +62,9 @@ class CreatePasswordScreen extends Component {
     return password === confirmPassword
   }
 
-  createAccount = () => {
+  createAccount = (event) => {
+    event.preventDefault()
+
     if (!this.isValid()) {
       return
     }
@@ -115,11 +116,6 @@ class CreatePasswordScreen extends Component {
           'first-view-main__mascara': isMascara,
         })}>
           {isMascara && <div className="mascara-info first-view-phone-invisible">
-            <Mascot
-              animationEventEmitter={this.animationEventEmitter}
-              width="225"
-              height="225"
-            />
             <div className="info">
               Nifty Wallet is a secure identity vault for Ethereum.
             </div>
@@ -127,7 +123,7 @@ class CreatePasswordScreen extends Component {
               It allows you to hold ether & tokens, and interact with decentralized applications.
             </div>
           </div>}
-          <div className="create-password">
+          <form className="create-password">
             <div className="create-password__title">
               Create Password
             </div>
@@ -188,7 +184,7 @@ class CreatePasswordScreen extends Component {
             </a>
             { */ }
             <Breadcrumbs total={3} currentIndex={0} />
-          </div>
+          </form>
         </div>
       </div>
     )

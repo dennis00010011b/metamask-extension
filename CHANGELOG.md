@@ -2,7 +2,70 @@
 
 ## Current Master
 
+## 4.10.0 Tue Dec 04 2018
+
+- [#212](https://github.com/poanetwork/nifty-wallet/pull/212): (Feature) interact with smart-contracts
+- [#209](https://github.com/poanetwork/nifty-wallet/pull/209): (Fix) Enhance custom RPC validation
+
+## 4.9.0 Mon Nov 26 2018
+
+- [#183](https://github.com/poanetwork/nifty-wallet/pull/183), [#205](https://github.com/poanetwork/nifty-wallet/pull/205): HD wallets support
+- [#199](https://github.com/poanetwork/nifty-wallet/pull/199): (Fix) Doubled fired events
+- [#190](https://github.com/poanetwork/nifty-wallet/pull/190): (Fix) Display non-zero fiat value
+- [#189](https://github.com/poanetwork/nifty-wallet/pull/189): (Fix) Branding of phishing detection page
+- [#207](https://github.com/poanetwork/nifty-wallet/pull/207): (Fix) Format of token balance in the tokens list
+- [#191](https://github.com/poanetwork/nifty-wallet/pull/191): (Fix) Handle: Cannot read property address of undefined
+- [#202](https://github.com/poanetwork/nifty-wallet/pull/202): (Fix) Detect tokens: handle undefined tokenAddresses
+- [#203](https://github.com/poanetwork/nifty-wallet/pull/203): (Fix) Handle undefined txParams
+- [#204](https://github.com/poanetwork/nifty-wallet/pull/204): (Fix) Handle e.trim is not a function
+
+## 4.8.8 Fri Nov 09 2018
+
+- [#186](https://github.com/poanetwork/nifty-wallet/pull/186): (Fix) Do not retrieve token metadata for non-token pending tx
+- [#184](https://github.com/poanetwork/nifty-wallet/pull/184): (Update) Rename repository
+- [#182](https://github.com/poanetwork/nifty-wallet/pull/182): (Refactoring) Generalizing of retrieving of faucets/exchanges links
+
+## 4.8.7 Tue Nov 06 2018
+
+- [#180](https://github.com/poanetwork/metamask-extension/pull/180), [#172](https://github.com/poanetwork/metamask-extension/pull/172), [#169](https://github.com/poanetwork/metamask-extension/pull/169), [#165](https://github.com/poanetwork/metamask-extension/pull/165), [#160](https://github.com/poanetwork/metamask-extension/pull/160): (Fix) Memory leaks
+- [#177](https://github.com/poanetwork/metamask-extension/pull/177): (Fix) Zero balance display instead of "None"
+- [#175](https://github.com/poanetwork/metamask-extension/pull/175), [#176](https://github.com/poanetwork/metamask-extension/pull/176), [#178](https://github.com/poanetwork/metamask-extension/pull/178): (Feature) Auto-detect tokens for POA
+- [#164](https://github.com/poanetwork/metamask-extension/pull/164): (Fix) Confirm token transfer page display fix
+
+## 4.8.6 Thu Oct 18 2018
+
+- [#153](https://github.com/poanetwork/metamask-extension/pull/153), [#154](https://github.com/poanetwork/metamask-extension/pull/154), [#158](https://github.com/poanetwork/metamask-extension/pull/158): (Feature) xDai chain support
+- [#149](https://github.com/poanetwork/metamask-extension/pull/149), [#150](https://github.com/poanetwork/metamask-extension/pull/150): (Fix) Add custom tokens validation
+- [#145](https://github.com/poanetwork/metamask-extension/pull/145), [#146](https://github.com/poanetwork/metamask-extension/pull/146): (Feature) Transfer tokens
+- [#142](https://github.com/poanetwork/metamask-extension/pull/142), [#143](https://github.com/poanetwork/metamask-extension/pull/143): (Feature) Token menu: view in explorer/copy/remove
+- [#140](https://github.com/poanetwork/metamask-extension/pull/140): (Feature) Search tokens in POA network
+- [#135](https://github.com/poanetwork/metamask-extension/pull/135), [#138](https://github.com/poanetwork/metamask-extension/pull/138), [#141](https://github.com/poanetwork/metamask-extension/pull/141): (Feature) Search tokens (in Mainnet)
+- [#132](https://github.com/poanetwork/metamask-extension/pull/132), [#133](https://github.com/poanetwork/metamask-extension/pull/133): (Fix) empty keyring on wrong password
+- [#130](https://github.com/poanetwork/metamask-extension/pull/130): (Fix) remove test domains form ENS resolver
+- [#128](https://github.com/poanetwork/metamask-extension/pull/128): (Fix) Clear an error on successful response from tokens balances
+- [#127](https://github.com/poanetwork/metamask-extension/pull/127): (Fix) Error is constantly shown through screens
+- [#122](https://github.com/poanetwork/metamask-extension/pull/122): (Fix) Remove fox animation components
+- [#120](https://github.com/poanetwork/metamask-extension/pull/120): (Feature) Update token's balance on account switch
+- [#119](https://github.com/poanetwork/metamask-extension/pull/119): (Fix) Shapeshift logo from local storage
+- [#118](https://github.com/poanetwork/metamask-extension/pull/118), [#123](https://github.com/poanetwork/metamask-extension/pull/123): (Feature) Copy button from main account page
+- [#104](https://github.com/poanetwork/metamask-extension/pull/104), [#108](https://github.com/poanetwork/metamask-extension/pull/108), [#109](https://github.com/poanetwork/metamask-extension/pull/109), [#116](https://github.com/poanetwork/metamask-extension/pull/116), [#121](https://github.com/poanetwork/metamask-extension/pull/121): (Feature) Support of Firefox
+- [#103](https://github.com/poanetwork/metamask-extension/pull/103): (Fix) to display localhost:8545 in Settings
+- [#101](https://github.com/poanetwork/metamask-extension/pull/101): (Fix) Catch Promises errors
+- [#99](https://github.com/poanetwork/metamask-extension/pull/99), [#100](https://github.com/poanetwork/metamask-extension/pull/100): (Fix) Validate custom RPC
+- [#98](https://github.com/poanetwork/metamask-extension/pull/98): (Feature) Unlimited amount of custom RPC
+
+## 4.8.5 Mon Aug 27 2018
+
+- [#94](https://github.com/poanetwork/metamask-extension/pull/94): (Fix) Force open notification popup
+- [#93](https://github.com/poanetwork/metamask-extension/pull/93): (Fix) Empty pending tx screen after logout/login
+- [#91](https://github.com/poanetwork/metamask-extension/pull/91): (Fix) Confirm tx notification popup: network name
+- [#89](https://github.com/poanetwork/metamask-extension/pull/89), [#95](https://github.com/poanetwork/metamask-extension/pull/95): (Feature) Support of token per network basis
+- [#85](https://github.com/poanetwork/metamask-extension/pull/85): (Upgrade) node, npm packages versions
 - [#84](https://github.com/poanetwork/metamask-extension/pull/84): (Fix) Change green color
+- [#83](https://github.com/poanetwork/metamask-extension/pull/83), [#92](https://github.com/poanetwork/metamask-extension/pull/92): (Feature) Changing of password
+- [#81](https://github.com/poanetwork/metamask-extension/pull/81): (Feature) Deanonymize private network
+- [#80](https://github.com/poanetwork/metamask-extension/pull/80): (Feature) Remove imported account
+- [#78](https://github.com/poanetwork/metamask-extension/pull/78): (Fix) Link to POA explorer for POA networks
 
 ## 4.8.4 Thu Aug 09 2018
 
@@ -29,8 +92,6 @@
 - Remove rejected transactions from transaction history
 - Add Trezor Support
 - Allow to remove accounts (Imported and Hardware Wallets)
-- [#4840](https://github.com/MetaMask/metamask-extension/pull/4840): Now shows notifications when transactions are completed.
-- [#4855](https://github.com/MetaMask/metamask-extension/pull/4855): network.js: convert rpc protocol to lower case.
 
 ## 4.8.0 Thur Jun 14 2018
 

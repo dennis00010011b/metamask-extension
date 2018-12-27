@@ -1,5 +1,6 @@
 const extension = require('extensionizer')
 const explorerLinks = require('eth-net-props').explorerLinks
+const { capitalizeFirstLetter } = require('../lib/util')
 
 class ExtensionPlatform {
 
@@ -20,12 +21,38 @@ class ExtensionPlatform {
     })
   }
 
+  /**
+   * Closes all notifications windows, when action is confirmed in popup
+   * or closes notification window itself, when action is confirmed from it
+   */
+  closeNotificationWindow () {
+    return extension.windows.getCurrent((curWindowsDetails) => {
+      if (curWindowsDetails.type === 'popup') {
+        return extension.windows.remove(curWindowsDetails.id)
+      } else {
+        extension.windows.getAll((windowsDetails) => {
+          const windowsDetailsFiltered = windowsDetails.filter((windowDetails) => windowDetails.id !== curWindowsDetails.id)
+          return windowsDetailsFiltered.forEach((windowDetails) => {
+            if (windowDetails.type === 'popup') {
+              extension.windows.remove(windowDetails.id)
+            }
+          })
+        })
+      }
+    })
+  }
+
   getVersion () {
     return extension.runtime.getManifest().version
   }
 
-  openExtensionInBrowser (route = null) {
+  openExtensionInBrowser (route = null, queryString = null) {
     let extensionURL = extension.runtime.getURL('home.html')
+
+    if (queryString) {
+      extensionURL += `?${queryString}`
+    }
+
     if (route) {
       extensionURL += `#${route}`
     }
@@ -68,7 +95,7 @@ class ExtensionPlatform {
 
     const nonce = parseInt(txMeta.txParams.nonce, 16)
     const title = 'Failed transaction'
-    const message = `Transaction ${nonce} failed! ${txMeta.err.message}`
+    const message = `Transaction ${nonce} failed! ${capitalizeFirstLetter(txMeta.err.message)}`
     this._showNotification(title, message)
   }
 
@@ -83,22 +110,23 @@ class ExtensionPlatform {
       })
   }
 
-  _subscribeToNotificationClicked () {
-    if (!extension.notifications.onClicked.hasListener(this._viewOnEtherScan)) {
-      extension.notifications.onClicked.addListener(this._viewOnEtherScan)
+  _subscribeToNotificationClicked = () => {
+    if (extension.notifications.onClicked.hasListener(this._viewOnExplorer)) {
+      extension.notifications.onClicked.removeListener(this._viewOnExplorer)
     }
+    extension.notifications.onClicked.addListener(this._viewOnExplorer)
   }
 
-  _viewOnEtherScan (txId) {
-    if (txId.startsWith('http://') || txId.startsWith('https://')) {
-      global.metamaskController.platform.openWindow({ url: txId })
+  _viewOnExplorer (url) {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      global.metamaskController.platform.openWindow({ url })
     }
   }
 
   _getExplorer (hash, networkId) {
     let explorerName
-    if (networkId === 99 || networkId === 77) {
-      explorerName = 'POA explorer'
+    if (networkId === 99 || networkId === 100 || networkId === 77) {
+      explorerName = 'BlockScout'
     } else {
       explorerName = 'Etherscan'
     }

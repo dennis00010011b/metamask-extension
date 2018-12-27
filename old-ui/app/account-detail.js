@@ -4,7 +4,7 @@ const Component = require('react').Component
 const h = require('react-hyperscript')
 const connect = require('react-redux').connect
 const actions = require('../../ui/app/actions')
-const valuesFor = require('./util').valuesFor
+const { getCurrentKeyring, ifContractAcc, valuesFor } = require('./util')
 const Identicon = require('./components/identicon')
 const EthBalance = require('./components/eth-balance')
 const TransactionList = require('./components/transaction-list')
@@ -14,6 +14,7 @@ const EditableLabel = require('./components/editable-label')
 const TabBar = require('./components/tab-bar')
 const TokenList = require('./components/token-list')
 const AccountDropdowns = require('./components/account-dropdowns').AccountDropdowns
+const CopyButton = require('./components/copyButton')
 
 module.exports = connect(mapStateToProps)(AccountDetailScreen)
 
@@ -21,6 +22,7 @@ function mapStateToProps (state) {
   return {
     metamask: state.metamask,
     identities: state.metamask.identities,
+    keyrings: state.metamask.keyrings,
     accounts: state.metamask.accounts,
     address: state.metamask.selectedAddress,
     accountDetail: state.appState.accountDetail,
@@ -32,6 +34,7 @@ function mapStateToProps (state) {
     currentCurrency: state.metamask.currentCurrency,
     currentAccountTab: state.metamask.currentAccountTab,
     tokens: state.metamask.tokens,
+    suggestedTokens: state.metamask.suggestedTokens,
     computedBalances: state.metamask.computedBalances,
   }
 }
@@ -48,6 +51,12 @@ AccountDetailScreen.prototype.render = function () {
   var identity = props.identities[selected]
   var account = props.accounts[selected]
   const { network, conversionRate, currentCurrency } = props
+
+  if (Object.keys(props.suggestedTokens).length > 0) {
+    this.props.dispatch(actions.showAddSuggestedTokenPage())
+  }
+
+  const currentKeyring = getCurrentKeyring(props.address, network, props.keyrings, props.identities)
 
   return (
 
@@ -141,6 +150,7 @@ AccountDetailScreen.prototype.render = function () {
                       selected,
                       network,
                       identities: props.identities,
+                      keyrings: props.keyrings,
                       enableAccountOptions: true,
                     },
                   ),
@@ -159,6 +169,12 @@ AccountDetailScreen.prototype.render = function () {
 
               h('div', {
                 style: {
+                  width: '8em',
+                  display: 'inline-flex',
+                  marginBottom: '15px',
+                },
+              }, [
+                h('span', {style: {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   paddingTop: '3px',
@@ -167,10 +183,13 @@ AccountDetailScreen.prototype.render = function () {
                   fontSize: '14px',
                   fontFamily: 'Nunito Bold',
                   textRendering: 'geometricPrecision',
-                  marginBottom: '15px',
                   color: 'rgba(255, 255, 255, 0.7)',
-                },
-              }, checksumAddress),
+                }}, checksumAddress),
+                h(CopyButton, {
+                  value: checksumAddress,
+                  isWhite: true,
+                }),
+              ]),
             ]),
 
             // account ballance
@@ -196,14 +215,20 @@ AccountDetailScreen.prototype.render = function () {
 
           h('.flex-grow'),
 
-          h('button', {
+          !ifContractAcc(currentKeyring) ? h('button', {
             onClick: () => props.dispatch(actions.buyEthView(selected)),
             style: { marginRight: '10px' },
-          }, 'Buy'),
+          }, 'Buy') : null,
 
           h('button', {
-            onClick: () => props.dispatch(actions.showSendPage()),
-          }, 'Send'),
+            onClick: () => {
+              if (ifContractAcc(currentKeyring)) {
+                return props.dispatch(actions.showSendContractPage({}))
+              } else {
+                return props.dispatch(actions.showSendPage())
+              }
+            },
+          }, ifContractAcc(currentKeyring) ? 'Execute methods' : 'Send'),
 
         ]),
       ]),
@@ -241,8 +266,8 @@ AccountDetailScreen.prototype.tabSections = function () {
 
     h(TabBar, {
       tabs: [
-        { content: 'Sent', key: 'history' },
-        { content: 'Tokens', key: 'tokens' },
+        { content: 'Sent', key: 'history', id: 'wallet-view__tab-history' },
+        { content: 'Tokens', key: 'tokens', id: 'wallet-view__tab-tokens' },
       ],
       defaultTab: currentAccountTab || 'history',
       tabSelected: (key) => {

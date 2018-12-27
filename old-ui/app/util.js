@@ -1,4 +1,5 @@
 const ethUtil = require('ethereumjs-util')
+const ethNetProps = require('eth-net-props')
 
 var valueTable = {
   wei: '1000000000000000000',
@@ -39,6 +40,10 @@ module.exports = {
   isHex: isHex,
   exportAsFile: exportAsFile,
   isInvalidChecksumAddress,
+  countSignificantDecimals,
+  getCurrentKeyring,
+  ifLooseAcc,
+  ifContractAcc,
 }
 
 function valuesFor (obj) {
@@ -111,27 +116,26 @@ function parseBalance (balance) {
 
 // Takes wei hex, returns an object with three properties.
 // Its "formatted" property is what we generally use to render values.
-function formatBalance (balance, decimalsToKeep, needsParse = true, network) {
-  const isSokol = parseInt(network) === 77
-  const isPOA = parseInt(network) === 99
-  const coinName = isPOA ? 'POA' : isSokol ? 'SPOA' : 'ETH'
+function formatBalance (balance, decimalsToKeep, needsParse = true, network, isToken, tokenSymbol) {
+  const coinName = ethNetProps.props.getNetworkCoinName(network)
+  const assetName = isToken ? tokenSymbol : coinName
   var parsed = needsParse ? parseBalance(balance) : balance.split('.')
   var beforeDecimal = parsed[0]
   var afterDecimal = parsed[1]
-  var formatted = 'None'
+  var formatted = '0'
   if (decimalsToKeep === undefined) {
     if (beforeDecimal === '0') {
       if (afterDecimal !== '0') {
         var sigFigs = afterDecimal.match(/^0*(.{2})/) // default: grabs 2 most significant digits
         if (sigFigs) { afterDecimal = sigFigs[0] }
-        formatted = '0.' + afterDecimal + ` ${coinName}`
+        formatted = '0.' + afterDecimal + ` ${assetName}`
       }
     } else {
-      formatted = beforeDecimal + '.' + afterDecimal.slice(0, 3) + ` ${coinName}`
+      formatted = beforeDecimal + '.' + afterDecimal.slice(0, 3) + ` ${assetName}`
     }
   } else {
     afterDecimal += Array(decimalsToKeep).join('0')
-    formatted = beforeDecimal + '.' + afterDecimal.slice(0, decimalsToKeep) + ` ${coinName}`
+    formatted = beforeDecimal + '.' + afterDecimal.slice(0, decimalsToKeep) + ` ${assetName}`
   }
   return formatted
 }
@@ -250,4 +254,86 @@ function exportAsFile (filename, data) {
     elem.click()
     document.body.removeChild(elem)
   }
+}
+
+/**
+ * returns the length of truncated significant decimals for fiat value
+ *
+ * @param {float} val The float value to be truncated
+ * @param {number} len The length of significant decimals
+ *
+ * returns {number} The length of truncated significant decimals
+**/
+function countSignificantDecimals (val, len) {
+    if (Math.floor(val) === val) {
+      return 0
+    }
+    const decimals = val.toString().split('.')[1]
+    const decimalsArr = decimals.split('')
+    let decimalsLen = decimalsArr.slice(0).reduce((res, val, ind, arr) => {
+      if (Number(val) === 0) {
+        res += 1
+      } else {
+        arr.splice(1) // break reduce function
+      }
+      return res
+    }, 0)
+    decimalsLen += len
+    const valWithSignificantDecimals = `${Math.floor(val)}.${decimalsArr.slice(0, decimalsLen).join('')}`
+    decimalsLen = parseFloat(valWithSignificantDecimals).toString().split('.')[1].length
+    return decimalsLen || 0
+}
+
+/**
+ * retrieves the current unlocked keyring
+ *
+ * @param {string} address The current unlocked address
+ * @param {array} keyrings The array of keyrings
+ * @param {array} identities The array of identities
+ *
+ * returns {object} keyring object corresponding to unlocked address
+**/
+function getCurrentKeyring (address, network, keyrings, identities) {
+  const identity = identities[address]
+  const simpleAddress = identity && identity.address.substring(2).toLowerCase()
+  const keyring = keyrings && keyrings.find((kr) => {
+    const isAddressIncluded = kr.accounts.includes(simpleAddress) || kr.accounts.includes(address)
+    if (ifContractAcc(kr)) {
+      return kr.network === network && isAddressIncluded
+    } else {
+      return isAddressIncluded
+    }
+  })
+
+  return keyring
+}
+
+/**
+ * checks, if keyring is imported account
+ *
+ * @param {object} keyring
+ *
+ * returns {boolean} true, if keyring is importec and false, if it is not
+**/
+function ifLooseAcc (keyring) {
+  try { // Sometimes keyrings aren't loaded yet:
+    const type = keyring.type
+    const isLoose = type !== 'HD Key Tree'
+    return isLoose
+  } catch (e) { return }
+}
+
+/**
+ * checks, if keyring is contract
+ *
+ * @param {object} keyring
+ *
+ * returns {boolean} true, if keyring is contract and false, if it is not
+**/
+function ifContractAcc (keyring) {
+  try { // Sometimes keyrings aren't loaded yet:
+    const type = keyring.type
+    const isContract = type === 'Simple Address'
+    return isContract
+  } catch (e) { return }
 }

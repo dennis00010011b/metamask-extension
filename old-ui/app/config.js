@@ -3,12 +3,15 @@ const Component = require('react').Component
 const h = require('react-hyperscript')
 const connect = require('react-redux').connect
 const actions = require('../../ui/app/actions')
+const LoadingIndicator = require('./components/loading')
+const Web3 = require('web3')
 const infuraCurrencies = require('./infura-conversion.json').objects.sort((a, b) => {
       return a.quote.name.toLocaleLowerCase().localeCompare(b.quote.name.toLocaleLowerCase())
     })
 const validUrl = require('valid-url')
 const exportAsFile = require('./util').exportAsFile
 const Modal = require('../../ui/app/components/modals/index').Modal
+const ethNetProps = require('eth-net-props')
 
 module.exports = connect(mapStateToProps)(ConfigScreen)
 
@@ -21,13 +24,16 @@ function mapStateToProps (state) {
 
 inherits(ConfigScreen, Component)
 function ConfigScreen () {
+  this.state = {
+    loading: false,
+  }
   Component.call(this)
 }
 
 ConfigScreen.prototype.render = function () {
-  var state = this.props
-  var metamaskState = state.metamask
-  var warning = state.warning
+  const state = this.props
+  const metamaskState = state.metamask
+  const warning = state.warning
 
   return (
     h('.flex-column.flex-grow', {
@@ -36,6 +42,10 @@ ConfigScreen.prototype.render = function () {
         overflowY: 'auto',
       },
     }, [
+
+      h(LoadingIndicator, {
+        isLoading: this.state.loading,
+      }),
 
       h(Modal, {}, []),
 
@@ -88,11 +98,11 @@ ConfigScreen.prototype.render = function () {
                 border: '1px solid #e2e2e2',
                 padding: '10px',
               },
-              onKeyPress (event) {
+              onKeyPress: (event) => {
                 if (event.key === 'Enter') {
-                  var element = event.target
-                  var newRpc = element.value
-                  rpcValidation(newRpc, state)
+                  const element = event.target
+                  const newRpc = element.value
+                  this.rpcValidation(newRpc, state)
                 }
               },
             }),
@@ -101,11 +111,11 @@ ConfigScreen.prototype.render = function () {
                 alignSelf: 'center',
                 marginTop: '20px',
               },
-              onClick (event) {
+              onClick: (event) => {
                 event.preventDefault()
-                var element = document.querySelector('input#new_rpc')
-                var newRpc = element.value
-                rpcValidation(newRpc, state)
+                const element = document.querySelector('input#new_rpc')
+                const newRpc = element.value
+                this.rpcValidation(newRpc, state)
               },
             }, 'Save'),
           ]),
@@ -191,10 +201,6 @@ ConfigScreen.prototype.render = function () {
               },
             }, [
               'Resetting is for developer use only. ',
-              h('a', {
-                href: 'http://metamask.helpscoutdocs.com/article/36-resetting-an-account',
-                target: '_blank',
-              }, 'Read more.'),
             ]),
             h('br'),
 
@@ -207,20 +213,51 @@ ConfigScreen.prototype.render = function () {
                 state.dispatch(actions.resetAccount())
               },
             }, 'Reset Account'),
-          ]),
 
+            h('hr.horizontal-line', {
+              style: {
+                marginTop: '20px',
+              },
+            }),
+
+            h('button', {
+              style: {
+                alignSelf: 'center',
+              },
+              onClick (event) {
+                event.preventDefault()
+                state.dispatch(actions.confirmChangePassword())
+              },
+            }, 'Change password'),
+          ]),
         ]),
       ]),
     ])
   )
 }
 
-function rpcValidation (newRpc, state) {
+ConfigScreen.prototype.componentWillUnmount = function () {
+  this.props.dispatch(actions.displayWarning(''))
+}
+
+ConfigScreen.prototype.rpcValidation = function (newRpc, state) {
   if (validUrl.isWebUri(newRpc)) {
-    state.dispatch(actions.setRpcTarget(newRpc))
+    this.setState({
+      loading: true,
+    })
+    const web3 = new Web3(new Web3.providers.HttpProvider(newRpc))
+    web3.eth.getBlockNumber((err, res) => {
+      if (err) {
+        state.dispatch(actions.displayWarning('Invalid RPC endpoint'))
+      } else {
+        state.dispatch(actions.setRpcTarget(newRpc))
+      }
+      this.setState({
+        loading: false,
+      })
+    })
   } else {
-    var appendedRpc = `http://${newRpc}`
-    if (validUrl.isWebUri(appendedRpc)) {
+    if (!newRpc.startsWith('http')) {
       state.dispatch(actions.displayWarning('URIs require the appropriate HTTP/HTTPS prefix.'))
     } else {
       state.dispatch(actions.displayWarning('Invalid RPC URI'))
@@ -229,16 +266,16 @@ function rpcValidation (newRpc, state) {
 }
 
 function currentConversionInformation (metamaskState, state) {
-  var currentCurrency = metamaskState.currentCurrency
-  var conversionDate = metamaskState.conversionDate
+  const currentCurrency = metamaskState.currentCurrency
+  const conversionDate = metamaskState.conversionDate
   return h('div', [
     h('span', {style: { fontWeight: 'bold', paddingRight: '10px'}}, 'Current Conversion'),
     h('span', {style: { fontWeight: 'bold', paddingRight: '10px', fontSize: '13px'}}, `Updated ${Date(conversionDate)}`),
     h('select#currentCurrency', {
       onChange (event) {
         event.preventDefault()
-        var element = document.getElementById('currentCurrency')
-        var newCurrency = element.value
+        const element = document.getElementById('currentCurrency')
+        const newCurrency = element.value
         state.dispatch(actions.setCurrentCurrency(newCurrency))
       },
       defaultValue: currentCurrency,
@@ -250,39 +287,44 @@ function currentConversionInformation (metamaskState, state) {
 }
 
 function currentProviderDisplay (metamaskState, state) {
-  var provider = metamaskState.provider
-  var title, value
+  const provider = metamaskState.provider
+  let title, value
 
   switch (provider.type) {
 
     case 'mainnet':
       title = 'Current Network'
-      value = 'Main Ethereum Network'
+      value = ethNetProps.props.getNetworkDisplayName(1)
       break
 
     case 'sokol':
       title = 'Current Network'
-      value = 'POA Sokol Test Network'
+      value = ethNetProps.props.getNetworkDisplayName(77)
       break
 
     case 'ropsten':
       title = 'Current Network'
-      value = 'Ropsten Test Network'
+      value = ethNetProps.props.getNetworkDisplayName(3)
       break
 
     case 'kovan':
       title = 'Current Network'
-      value = 'Kovan Test Network'
+      value = ethNetProps.props.getNetworkDisplayName(42)
       break
 
     case 'rinkeby':
       title = 'Current Network'
-      value = 'Rinkeby Test Network'
+      value = ethNetProps.props.getNetworkDisplayName(4)
       break
 
     case 'poa':
       title = 'Current Network'
-      value = 'POA Network'
+      value = ethNetProps.props.getNetworkDisplayName(99)
+      break
+
+    case 'dai':
+      title = 'Current Network'
+      value = ethNetProps.props.getNetworkDisplayName(100)
       break
 
     default:

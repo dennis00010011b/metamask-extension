@@ -352,7 +352,8 @@ class TransactionStateManager extends EventEmitter {
   setTxStatusFailed (txId, err) {
     const txMeta = this.getTx(txId)
     txMeta.err = {
-      message: err.toString(),
+      message: (err ? (err.message || err.error || err) : '').toString(),
+      rpc: err.value,
       stack: err.stack,
     }
     this.updateTx(txMeta)
@@ -399,6 +400,11 @@ class TransactionStateManager extends EventEmitter {
   */
   _setTxStatus (txId, status) {
     const txMeta = this.getTx(txId)
+
+    if (!txMeta) {
+      return
+    }
+
     txMeta.status = status
     setTimeout(() => {
       try {

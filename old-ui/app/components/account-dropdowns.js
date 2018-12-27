@@ -9,6 +9,7 @@ const Identicon = require('./identicon')
 const ethUtil = require('ethereumjs-util')
 const copyToClipboard = require('copy-to-clipboard')
 const ethNetProps = require('eth-net-props')
+const { getCurrentKeyring, ifLooseAcc, ifContractAcc } = require('../util')
 
 class AccountDropdowns extends Component {
   constructor (props) {
@@ -22,21 +23,40 @@ class AccountDropdowns extends Component {
   }
 
   renderAccounts () {
-    const { identities, selected, keyrings } = this.props
-    const accountOrder = keyrings.reduce((list, keyring) => list.concat(keyring.accounts), [])
+      const { identities, selected, keyrings, network } = this.props
+      const accountOrder = keyrings.reduce((list, keyring) => {
+        if (ifContractAcc(keyring) && keyring.network === network) {
+          list = list.concat(keyring.accounts)
+        } else if (!ifContractAcc(keyring)) {
+          list = list.concat(keyring.accounts)
+        }
+        return list
+      }, [])
 
-    return accountOrder.map((address, index) => {
-      const identity = identities[address]
-      const isSelected = identity.address === selected
+      return accountOrder.map((address, index) => {
+        const identity = identities[address]
+        if (!identity) {
+          return null
+        }
+        const isSelected = identity.address === selected
 
-      const simpleAddress = identity.address.substring(2).toLowerCase()
+        const keyring = getCurrentKeyring(address, network, keyrings, identities)
 
-      const keyring = keyrings.find((kr) => {
-        return kr.accounts.includes(simpleAddress) ||
-          kr.accounts.includes(identity.address)
+        // display contract acc only for network where it was created
+        if (ifContractAcc(keyring)) {
+          if (keyring.network !== network) {
+            return null
+          } else {
+            return this.accountsDropdownItemView(index, isSelected, keyring, identity)
+          }
+        } else {
+          return this.accountsDropdownItemView(index, isSelected, keyring, identity)
+        }
       })
+  }
 
-      return h(
+  accountsDropdownItemView (index, isSelected, keyring, identity) {
+    return h(
         DropdownMenuItem,
         {
           closeMenu: () => {},
@@ -82,7 +102,7 @@ class AccountDropdowns extends Component {
             },
           }, identity.name || ''),
           this.indicateIfLoose(keyring),
-          this.ifLooseAcc(keyring) ? h('.remove', {
+          ifLooseAcc(keyring) ? h('.remove', {
             onClick: (event) => {
               event.preventDefault()
               event.stopPropagation()
@@ -95,19 +115,29 @@ class AccountDropdowns extends Component {
           }) : null,
         ]
       )
-    })
   }
 
-  ifLooseAcc (keyring) {
-    try { // Sometimes keyrings aren't loaded yet:
-      const type = keyring.type
-      const isLoose = type !== 'HD Key Tree'
-      return isLoose
-    } catch (e) { return }
+  ifHardwareAcc (keyring) {
+    if (keyring && keyring.type.search('Hardware') !== -1) {
+      return true
+    }
+    return false
   }
 
   indicateIfLoose (keyring) {
-    return this.ifLooseAcc(keyring) ? h('.keyring-label', 'IMPORTED') : null
+    if (ifLooseAcc(keyring)) {
+      let label
+      if (ifContractAcc(keyring)) {
+        label = 'CONTRACT'
+      } else if (this.ifHardwareAcc(keyring)) {
+        label = 'HARDWARE'
+      } else {
+        label = 'IMPORTED'
+      }
+      return h('.keyring-label', label)
+    }
+
+    return null
   }
 
   renderAccountSelector () {
@@ -119,11 +149,11 @@ class AccountDropdowns extends Component {
       {
         useCssTransition: true, // Hardcoded because account selector is temporarily in app-header
         style: {
+          position: 'absolute',
           marginLeft: '-213px',
-          marginTop: '32px',
+          top: '38px',
           minWidth: '180px',
-          overflowY: 'auto',
-          maxHeight: '300px',
+          maxHeight: accountSelectorActive ? '300px' : '0px',
           width: '265px',
         },
         innerStyle: {
@@ -172,25 +202,44 @@ class AccountDropdowns extends Component {
             }, 'Import Account'),
           ]
         ),
+        h(
+          DropdownMenuItem,
+          {
+            style: {
+              padding: '8px 0px',
+            },
+            closeMenu: () => {},
+            onClick: () => actions.showConnectHWWalletPage(),
+          },
+          [
+            h('span', {
+              style: {
+                fontSize: '16px',
+                marginBottom: '5px',
+                color: '#60db97',
+              },
+            }, 'Connect hardware wallet'),
+          ]
+        ),
       ]
     )
   }
 
   renderAccountOptions () {
-    const { actions, network } = this.props
+    const { actions, selected, network, keyrings, identities } = this.props
     const { optionsMenuActive } = this.state
 
-    const isSokol = parseInt(network) === 77
-    const isPOA = parseInt(network) === 99
-    const explorerStr = (isSokol || isPOA) ? 'POA explorer' : 'Etherscan'
+    const keyring = getCurrentKeyring(selected, network, keyrings, identities)
 
     return h(
       Dropdown,
       {
         style: {
+          position: 'relative',
           marginLeft: '-234px',
           minWidth: '180px',
-          marginTop: '30px',
+          // marginTop: '30px',
+          top: '30px',
           width: '280px',
         },
         isOpen: optionsMenuActive,
@@ -213,7 +262,7 @@ class AccountDropdowns extends Component {
               global.platform.openWindow({ url })
             },
           },
-          `View account on ${explorerStr}`,
+          `View on block explorer`,
         ),
         h(
           DropdownMenuItem,
@@ -237,9 +286,22 @@ class AccountDropdowns extends Component {
               copyToClipboard(checkSumAddress)
             },
           },
-          'Copy Address to clipboard',
+          'Copy address to clipboard',
         ),
-        h(
+        ifContractAcc(keyring) ? h(
+          DropdownMenuItem,
+          {
+            closeMenu: () => {},
+            onClick: async () => {
+              const { selected } = this.props
+              const contractProps = await this.props.actions.getContract(selected)
+              const abi = contractProps && contractProps.abi
+              copyToClipboard(JSON.stringify(abi))
+            },
+          },
+          'Copy ABI to clipboard',
+        ) : null,
+        (!this.ifHardwareAcc(keyring) && !(ifContractAcc(keyring))) ? h(
           DropdownMenuItem,
           {
             closeMenu: () => {},
@@ -248,7 +310,7 @@ class AccountDropdowns extends Component {
             },
           },
           'Export Private Key',
-        ),
+        ) : null,
       ]
     )
   }
@@ -264,11 +326,9 @@ class AccountDropdowns extends Component {
       },
       [
         enableAccountsSelector && h(
-          // 'i.fa.fa-angle-down',
           'div.accounts-selector',
           {
             style: {
-              // fontSize: '1.8em',
               background: 'url(images/switch_acc.svg) white center center no-repeat',
               height: '25px',
               width: '25px',
@@ -285,15 +345,8 @@ class AccountDropdowns extends Component {
           this.renderAccountSelector(),
         ),
         enableAccountOptions && h(
-          'div.account-dropdown',
+          'div.address-dropdown.account-dropdown',
           {
-            style: {
-              backgroundImage: 'url(../images/more.svg)',
-              width: '30px',
-              height: '24px',
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'center',
-            },
             onClick: (event) => {
               event.stopPropagation()
               this.setState({
@@ -306,6 +359,21 @@ class AccountDropdowns extends Component {
         ),
       ]
     )
+  }
+
+  // switch to the first account in the list on network switch, if unlocked account was contract before change
+  componentDidUpdate (prevProps) {
+    if (!isNaN(this.props.network)) {
+      const { selected, network, keyrings, identities } = this.props
+      if (network !== prevProps.network) {
+        const keyring = getCurrentKeyring(selected, this.props.network, keyrings, identities)
+        const firstKeyring = keyrings && keyrings[0]
+        const firstKeyRingAcc = firstKeyring && firstKeyring.accounts && firstKeyring.accounts[0]
+        if (!keyring || (ifContractAcc(keyring) && firstKeyRingAcc)) {
+          return this.props.actions.showAccountDetail(firstKeyRingAcc)
+        }
+      }
+    }
   }
 }
 
@@ -333,8 +401,10 @@ const mapDispatchToProps = (dispatch) => {
       showAccountDetail: (address) => dispatch(actions.showAccountDetail(address)),
       addNewAccount: () => dispatch(actions.addNewAccount()),
       showImportPage: () => dispatch(actions.showImportPage()),
+      showConnectHWWalletPage: () => dispatch(actions.showConnectHWWalletPage()),
       showQrView: (selected, identity) => dispatch(actions.showQrView(selected, identity)),
       showDeleteImportedAccount: (identity) => dispatch(actions.showDeleteImportedAccount(identity)),
+      getContract: (addr) => dispatch(actions.getContract(addr)),
     },
   }
 }

@@ -6,32 +6,41 @@ const actions = require('../../ui/app/actions')
 const LoadingIndicator = require('./components/loading')
 const txHelper = require('../lib/tx-helper')
 const log = require('loglevel')
+const { getCurrentKeyring, ifContractAcc } = require('./util')
 
 const PendingTx = require('./components/pending-tx')
-const PendingMsg = require('./components/pending-msg')
-const PendingPersonalMsg = require('./components/pending-personal-msg')
-const PendingTypedMsg = require('./components/pending-typed-msg')
+import PendingMsg from './components/pending-msg'
+import PendingPersonalMsg from './components/pending-personal-msg'
+import PendingTypedMsg from './components/pending-typed-msg'
 const Loading = require('./components/loading')
 
 module.exports = connect(mapStateToProps)(ConfirmTxScreen)
 
 function mapStateToProps (state) {
+  const { metamask, appState } = state
+  const { screenParams, pendingTxIndex } = appState.currentView
   return {
-    identities: state.metamask.identities,
-    accounts: state.metamask.accounts,
-    selectedAddress: state.metamask.selectedAddress,
-    unapprovedTxs: state.metamask.unapprovedTxs,
-    unapprovedMsgs: state.metamask.unapprovedMsgs,
-    unapprovedPersonalMsgs: state.metamask.unapprovedPersonalMsgs,
-    unapprovedTypedMessages: state.metamask.unapprovedTypedMessages,
-    index: state.appState.currentView.context,
-    warning: state.appState.warning,
-    network: state.metamask.network,
-    provider: state.metamask.provider,
-    conversionRate: state.metamask.conversionRate,
-    currentCurrency: state.metamask.currentCurrency,
-    blockGasLimit: state.metamask.currentBlockGasLimit,
-    computedBalances: state.metamask.computedBalances,
+    identities: metamask.identities,
+    keyrings: metamask.keyrings,
+    accounts: metamask.accounts,
+    selectedAddress: metamask.selectedAddress,
+    unapprovedTxs: metamask.unapprovedTxs,
+    unapprovedMsgs: metamask.unapprovedMsgs,
+    unapprovedPersonalMsgs: metamask.unapprovedPersonalMsgs,
+    unapprovedTypedMessages: metamask.unapprovedTypedMessages,
+    index: pendingTxIndex || 0,
+    warning: appState.warning,
+    network: metamask.network,
+    provider: metamask.provider,
+    conversionRate: metamask.conversionRate,
+    currentCurrency: metamask.currentCurrency,
+    blockGasLimit: metamask.currentBlockGasLimit,
+    computedBalances: metamask.computedBalances,
+    isToken: (screenParams && screenParams.isToken),
+    tokenSymbol: (screenParams && screenParams.tokenSymbol),
+    tokensToSend: (screenParams && screenParams.tokensToSend),
+    tokensTransferTo: (screenParams && screenParams.tokensTransferTo),
+    isContractExecutionByUser: (screenParams && screenParams.isContractExecutionByUser),
   }
 }
 
@@ -47,13 +56,16 @@ ConfirmTxScreen.prototype.render = function () {
   let { conversionRate } = props
 
   const isSokol = parseInt(network) === 77
+  const isDai = parseInt(network) === 100
   if (isSokol) {
     conversionRate = 0
+  } else if (isDai) {
+    conversionRate = 1
   }
 
   var unconfTxList = txHelper(unapprovedTxs, unapprovedMsgs, unapprovedPersonalMsgs, unapprovedTypedMessages, network)
-
-  var txData = unconfTxList[props.index] || {}
+  const ind = props.index || 0
+  var txData = unconfTxList[ind] || {}
   var txParams = txData.params || {}
 
   log.info(`rendering a combined ${unconfTxList.length} unconf msg & txs`)
@@ -95,8 +107,12 @@ ConfirmTxScreen.prototype.render = function () {
         unconfTxListLength,
         computedBalances,
         network,
+        isToken: props.isToken,
+        tokenSymbol: props.tokenSymbol,
+        tokensToSend: props.tokensToSend,
+        tokensTransferTo: props.tokensTransferTo,
         // Actions
-        buyEth: this.buyEth.bind(this, txParams.from || props.selectedAddress),
+        buyEth: this.buyEth.bind(this, txParams.from || props.selectedAddress, props.isContractExecutionByUser),
         sendTransaction: this.sendTransaction.bind(this),
         cancelTransaction: this.cancelTransaction.bind(this, txData),
         cancelAllTransactions: this.cancelAllTransactions.bind(this, unconfTxList),
@@ -135,26 +151,29 @@ function currentTxView (opts) {
   }
 }
 
-ConfirmTxScreen.prototype.buyEth = function (address, event) {
+ConfirmTxScreen.prototype.buyEth = function (address, isContractExecutionByUser, event) {
   event.preventDefault()
-  this.props.dispatch(actions.buyEthView(address))
+  this.props.dispatch(actions.buyEthView(address, isContractExecutionByUser))
 }
 
 ConfirmTxScreen.prototype.sendTransaction = function (txData, event) {
   this.stopPropagation(event)
   this.props.dispatch(actions.updateAndApproveTx(txData))
+  this._checkIfContractExecutionAndUnlockContract(txData)
 }
 
 ConfirmTxScreen.prototype.cancelTransaction = function (txData, event) {
   this.stopPropagation(event)
   event.preventDefault()
   this.props.dispatch(actions.cancelTx(txData))
+  this._checkIfContractExecutionAndUnlockContract(txData)
 }
 
 ConfirmTxScreen.prototype.cancelAllTransactions = function (unconfTxList, event) {
   this.stopPropagation(event)
   event.preventDefault()
   this.props.dispatch(actions.cancelAllTx(unconfTxList))
+  this._checkIfMultipleContractExecutionAndUnlockContract(unconfTxList)
 }
 
 ConfirmTxScreen.prototype.signMessage = function (msgData, event) {
@@ -203,6 +222,46 @@ ConfirmTxScreen.prototype.cancelTypedMessage = function (msgData, event) {
   log.info('canceling typed message')
   this.stopPropagation(event)
   this.props.dispatch(actions.cancelTypedMsg(msgData))
+}
+
+ConfirmTxScreen.prototype._checkIfMultipleContractExecutionAndUnlockContract = function (unconfTxList) {
+  const areTxsToOneContractFromTheList = unconfTxList.slice(0).reduce((res, txData, ind, unconfTxList) => {
+    if (txData.txParams.data && this.props.isContractExecutionByUser) {
+      const to = txData && txData.txParams && txData.txParams.to
+      const targetContractIsInTheList = Object.keys(this.props.accounts).some((acc) => acc === to)
+      if (targetContractIsInTheList && Object.keys(res).length === 0) {
+        res = { status: true, to }
+      } else if (res.status && res.to !== to) {
+        res = { status: false }
+        unconfTxList.splice(1)
+      }
+    } else {
+      res = { status: false }
+      unconfTxList.splice(1)
+    }
+    return res
+  }, {})
+
+  if (areTxsToOneContractFromTheList.status) {
+    this._unlockContract(areTxsToOneContractFromTheList.to)
+  }
+}
+
+ConfirmTxScreen.prototype._checkIfContractExecutionAndUnlockContract = function (txData) {
+  if (txData.txParams.data && this.props.isContractExecutionByUser) {
+    const to = txData && txData.txParams && txData.txParams.to
+    const targetContractIsInTheList = Object.keys(this.props.accounts).some((acc) => acc === to)
+    if (targetContractIsInTheList) {
+      this._unlockContract(to)
+    }
+  }
+}
+
+ConfirmTxScreen.prototype._unlockContract = function (to) {
+  const currentKeyring = getCurrentKeyring(to, this.props.network, this.props.keyrings, this.props.identities)
+  if (ifContractAcc(currentKeyring)) {
+    this.props.dispatch(actions.showAccountDetail(to))
+  }
 }
 
 function warningIfExists (warning) {

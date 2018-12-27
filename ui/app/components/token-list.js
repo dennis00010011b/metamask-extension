@@ -2,7 +2,7 @@ const Component = require('react').Component
 const PropTypes = require('prop-types')
 const h = require('react-hyperscript')
 const inherits = require('util').inherits
-const TokenTracker = require('eth-token-tracker')
+const TokenTracker = require('eth-token-watcher')
 const TokenCell = require('./token-cell.js')
 const connect = require('react-redux').connect
 const selectors = require('../selectors')
@@ -13,6 +13,7 @@ function mapStateToProps (state) {
     network: state.metamask.network,
     tokens: state.metamask.tokens,
     userAddress: selectors.getSelectedAddress(state),
+    assetImages: state.metamask.assetImages,
   }
 }
 
@@ -44,10 +45,9 @@ function TokenList () {
 }
 
 TokenList.prototype.render = function () {
-  const { userAddress } = this.props
+  const { userAddress, assetImages } = this.props
   const state = this.state
   const { tokens, isLoading, error } = state
-
   if (isLoading) {
     return this.message(this.context.t('loadingTokens'))
   }
@@ -74,7 +74,10 @@ TokenList.prototype.render = function () {
     ])
   }
 
-  return h('div', tokens.map((tokenData) => h(TokenCell, tokenData)))
+  return h('div', tokens.map((tokenData) => {
+    tokenData.image = assetImages[tokenData.address]
+    return h(TokenCell, tokenData)
+  }))
 
 }
 
