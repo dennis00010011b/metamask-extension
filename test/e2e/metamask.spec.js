@@ -1103,6 +1103,7 @@ describe('Metamask popup page', async function () {
       // check, that imported account is removed
       const menu = await waitUntilShowUp(menus.account.menu)
       await menu.click()
+      await delay(3000)
       const label = await waitUntilShowUp(menus.account.label, 25)
       assert.notEqual(label, false, "account isn't deleted")
       await menu.click()
