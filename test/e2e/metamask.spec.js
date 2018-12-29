@@ -71,7 +71,7 @@ describe('Metamask popup page', async function () {
   describe('Setup', async function () {
 
     it('switches to extensions list', async function () {
-      await delay(300000)
+      await delay(300)
       await switchToFirstPage()
       await delay(5000)
     })
@@ -1112,6 +1112,7 @@ describe('Metamask popup page', async function () {
 
   describe('Sign Data', () => {
     it('Simulate sign request ', async function () {
+      await delay(5000)
       await setProvider(NETWORKS.LOCALHOST)
       await driver.get('https://danfinlay.github.io/js-eth-personal-sign-examples/')
       const button = await waitUntilShowUp(By.id('ethSignButton'))
