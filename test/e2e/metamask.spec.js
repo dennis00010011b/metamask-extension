@@ -1055,7 +1055,7 @@ describe('Metamask popup page', async function () {
         assert.equal(await f.executeTransferMethod(2, account1), true, "can't execute the method 'transfer'")
         await f.delay(2000)
         const button = await f.waitUntilShowUp(screens.confirmTransaction.button.submit)
-        assert.equal(await button.getText(), 'Submit', 'button has incorrect name')
+        assert.equal(await button.getAttribute('value'), 'Submit', 'button has incorrect name')
         await button.click()
         await f.delay(2000)
         const address = await f.waitUntilShowUp(screens.main.address)
