@@ -12,6 +12,7 @@ const createdAccounts = []
 const eventsEmitter = 'https://vbaranov.github.io/event-listener-dapp/'
 
 describe('Metamask popup page', async function () {
+
   this.timeout(20000)
 
   const f = new Func()
