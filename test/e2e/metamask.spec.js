@@ -12,6 +12,8 @@ const createdAccounts = []
 const eventsEmitter = 'https://vbaranov.github.io/event-listener-dapp/'
 
 describe('Metamask popup page', async function () {
+  this.timeout(0)
+
   const f = new Func()
   let driver, tokenAddress, extensionId
   let password = '123456789'
@@ -22,8 +24,6 @@ describe('Metamask popup page', async function () {
     incorrect: '1234567890',
   }
   const token = { supply: 101, name: 'Test', decimals: 0, ticker: 'ABC' }
-
-  this.timeout(0)
 
   before(async function () {
     if (process.env.SELENIUM_BROWSER === 'chrome') {
