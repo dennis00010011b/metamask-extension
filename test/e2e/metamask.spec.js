@@ -64,7 +64,7 @@ describe('Metamask popup page', async function () {
   })
 
   after(async function () {
-    await driver.quit()
+    // await driver.quit()
   })
 
   describe('Setup', async function () {
@@ -76,7 +76,7 @@ describe('Metamask popup page', async function () {
     })
   })
 
-  describe('Log In', async () => {
+  describe('Log In', async function () {
 
     it('title is \'Nifty Wallet\'', async () => {
       const title = await driver.getTitle()
@@ -131,7 +131,7 @@ describe('Metamask popup page', async function () {
     })
   })
 
-  describe('Account Creation', async () => {
+  describe('Account Creation', async function () {
 
     const newAccountName = 'new name'
 
@@ -269,7 +269,7 @@ describe('Metamask popup page', async function () {
     })
   })
 
-  describe('Import Account', () => {
+  describe('Import Account', async function () {
 
     it('Open import account menu', async function () {
       await f.setProvider(NETWORKS.POA)
@@ -325,7 +325,7 @@ describe('Metamask popup page', async function () {
     })
   })
 
-  describe('Import Contract account', async () => {
+  describe('Import Contract account', async function () {
 
     const contractSokol = '0x215b2ab35749e5a9f3efe890de602fb9844e842f'
     console.log('Contract ' + contractSokol + ' , Sokol')
@@ -1083,7 +1083,7 @@ describe('Metamask popup page', async function () {
     })
   })
 
-  describe('Delete Imported Account', () => {
+  describe('Delete Imported Account', async function () {
 
     it('Open delete imported account screen', async function () {
       const menu = await f.waitUntilShowUp(menus.account.menu)
@@ -1135,29 +1135,24 @@ describe('Metamask popup page', async function () {
     })
   })
 
-  describe('Sign Data', () => {
-    let isSignRequestCreated
+  describe('Sign Data', async function () {
+
     it('Simulate sign request ', async function () {
       await f.delay(5000)
       await f.setProvider(NETWORKS.LOCALHOST)
-      try {
-        await driver.get('https://danfinlay.github.io/js-eth-personal-sign-examples/')
-        const button = await f.waitUntilShowUp(By.id('ethSignButton'))
-        await button.click()
-        isSignRequestCreated = true
-      } catch (err) {
-        console.log("SIGN REQUEST WASN'T CREATED. TESTS HAVEN'T BEEN EXECUTED!!!!!!!")
-      }
+      await driver.get('https://danfinlay.github.io/js-eth-personal-sign-examples/')
+      const button = await f.waitUntilShowUp(By.id('ethSignButton'))
+      await button.click()
     })
-    if (isSignRequestCreated) {
-      it('navigates back to MetaMask popup in the tab', async function () {
-        if (process.env.SELENIUM_BROWSER === 'chrome') {
-          await driver.get(`chrome-extension://${extensionId}/popup.html`)
-        } else if (process.env.SELENIUM_BROWSER === 'firefox') {
-          await driver.get(`moz-extension://${extensionId}/popup.html`)
-        }
-        await f.delay(700)
-      })
+
+    it('navigates back to MetaMask popup in the tab', async function () {
+      if (process.env.SELENIUM_BROWSER === 'chrome') {
+        await driver.get(`chrome-extension://${extensionId}/popup.html`)
+      } else if (process.env.SELENIUM_BROWSER === 'firefox') {
+        await driver.get(`moz-extension://${extensionId}/popup.html`)
+      }
+      await f.delay(700)
+    })
 
       it('error message is displayed and contains text', async function () {
         const error = await f.waitUntilShowUp(screens.signMessage.error)
@@ -1198,10 +1193,9 @@ describe('Metamask popup page', async function () {
         const identicon = await f.waitUntilShowUp(screens.main.identicon)
         assert.notEqual(identicon, false, 'main screen didn\'t opened')
       })
-    }
   })
 
-  describe('Export private key', async () => {
+  describe('Export private key', async function () {
 
     it('open dialog', async function () {
       await driver.navigate().refresh()
@@ -1281,7 +1275,7 @@ describe('Metamask popup page', async function () {
     })
   })
 
-  describe('Import Ganache seed phrase', function () {
+  describe('Import Ganache seed phrase', async function () {
 
     it('logs out', async function () {
       const menu = await f.waitUntilShowUp(menus.sandwich.menu)
@@ -1344,7 +1338,7 @@ describe('Metamask popup page', async function () {
     })
   })
 
-  describe('Check the filter of emitted events', function () {
+  describe('Check the filter of emitted events', async function () {
 
     it('emit event', async function () {
       await f.setProvider(NETWORKS.SOKOL)
@@ -1408,7 +1402,7 @@ describe('Metamask popup page', async function () {
     })
   })
 
-  describe('Add Token: Custom', function () {
+  describe('Add Token: Custom', async function () {
 
     describe('Add token to LOCALHOST', function () {
 
@@ -1904,7 +1898,7 @@ describe('Metamask popup page', async function () {
 
   })
 
-  describe('Change password', async () => {
+  describe('Change password', async function () {
 
     let fieldNewPassword
     let fieldConfirmNewPassword
@@ -2075,7 +2069,7 @@ describe('Metamask popup page', async function () {
     })
   })
 
-  describe('Add Token:Search', function () {
+  describe('Add Token:Search', async function () {
     const request = {
       valid: 'cry',
       invalid: 'zzz',
@@ -2362,7 +2356,7 @@ describe('Metamask popup page', async function () {
     })
   })
 
-  describe('Custom Rpc', function () {
+  describe('Custom Rpc', async function () {
     const invalidStringUrl = 'http://lwkdfowi**&#v er'
     const urlWithoutHttp = 'infura.com'
     const invalidEndpoint = 'http://abrakadabrawdjkwjeciwkasuhlvflwe.com'
