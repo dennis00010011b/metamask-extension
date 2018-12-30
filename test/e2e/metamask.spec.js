@@ -2,7 +2,7 @@ const path = require('path')
 const assert = require('assert')
 const clipboardy = require('clipboardy')
 const webdriver = require('selenium-webdriver')
-const { By, Key } = webdriver
+const { By } = webdriver
 const Func = require('./func').Functions
 const { menus, screens, elements, NETWORKS } = require('./elements')
 const testSeedPhrase = 'horn among position unable audit puzzle cannon apology gun autumn plug parrot'
@@ -12,7 +12,7 @@ const createdAccounts = []
 const eventsEmitter = 'https://vbaranov.github.io/event-listener-dapp/'
 
 describe('Metamask popup page', async function () {
-  let f = new Func()
+  const f = new Func()
   let driver, tokenAddress, extensionId
   let password = '123456789'
   let abiClipboard
@@ -64,7 +64,7 @@ describe('Metamask popup page', async function () {
   })
 
   after(async function () {
-    // await driver.quit()
+    await driver.quit()
   })
 
   describe('Setup', async function () {
@@ -132,6 +132,7 @@ describe('Metamask popup page', async function () {
   })
 
   describe('Account Creation', async () => {
+
     const newAccountName = 'new name'
 
     it('sets provider type to localhost', async function () {
@@ -151,6 +152,7 @@ describe('Metamask popup page', async function () {
       console.log(createdAccounts[0])
       assert.notEqual(createdAccounts[0].length, 20, "address isn't displayed")
     })
+
     it('Check clipboard buffer', async function () {
       const text = clipboardy.readSync()
       assert.equal(text.length, 42, "address account wasn't copied to clipboard")
@@ -260,6 +262,7 @@ describe('Metamask popup page', async function () {
       const title = await f.waitUntilShowUp(screens.info.title)
       assert.equal(await title.getText(), screens.info.titleText, 'title is incorrect')
     })
+
     it('close \'Info\' screen by clicking button arrow', async () => {
       const button = await f.waitUntilShowUp(screens.info.buttonArrow)
       await button.click()
@@ -320,16 +323,17 @@ describe('Metamask popup page', async function () {
       console.log('Balance = ' + balance)
       assert.equal(parseFloat(balance) > 0.001, true, 'Balance of account 0xf4702CbA917260b2D6731Aea6385215073e8551b TOO LOW !!! Please refill with Sokol eth!!!!')
     })
-
   })
 
   describe('Import Contract account', async () => {
+
     const contractSokol = '0x215b2ab35749e5a9f3efe890de602fb9844e842f'
     console.log('Contract ' + contractSokol + ' , Sokol')
     const wrongAddress = '0xB87b6077D59B01Ab9fa8cd5A1A21D02a4d60D35'
     const notContractAddress = '0x56B2e3C3cFf7f3921Dc2e0F8B8e20d1eEc29216b'
 
     describe('Import Contract', async () => {
+
       it('opens import account menu', async function () {
         await f.setProvider(NETWORKS.ROPSTEN)
         const menu = await f.waitUntilShowUp(menus.account.menu)
@@ -375,10 +379,11 @@ describe('Metamask popup page', async function () {
         assert.notEqual(field, false, "field 'ABI' isn't displayed")
       })
 
-     it("Field 'ABI' is empty if contract isn't verified in current network", async function () {
+      it("Field 'ABI' is empty if contract isn't verified in current network", async function () {
         const field = await f.waitUntilShowUp(screens.importAccounts.contractABI)
         assert.equal(await field.getText(), '', "field 'ABI' isn't displayed")
       })
+
       it("Fill 'Address' with not contract address , SOKOL", async function () {
         await f.setProvider(NETWORKS.SOKOL)
         const field = await f.waitUntilShowUp(screens.importAccounts.contractAddress)
@@ -429,20 +434,23 @@ describe('Metamask popup page', async function () {
     })
 
     describe("Check 3dot menu for 'Contract' account", () => {
+
       it('open 3dot menu', async function () {
         const menu = await f.waitUntilShowUp(menus.dot.menu)
         await menu.click()
         await f.waitUntilShowUp(menus.dot.item)
         const items = await driver.findElements(menus.dot.item)
         assert.equal(items.length, 4, '3dot menu has incorrect number of items')
-       })
+      })
+
       it('Check text of items', async function () {
         const items = await driver.findElements(menus.dot.item)
         assert.equal(await items[0].getText(), 'View on block explorer', '1st item has incorrect text')
         assert.equal(await items[1].getText(), 'Show QR Code', '2st item has incorrect text')
         assert.equal(await items[2].getText(), 'Copy address to clipboard', '3st item has incorrect text')
         assert.equal(await items[3].getText(), 'Copy ABI to clipboard', '4st item has incorrect text')
-     })
+      })
+
       it("Click 'Copy ABI'", async function () {
         const items = await driver.findElements(menus.dot.item)
         await items[3].click()
@@ -482,7 +490,9 @@ describe('Metamask popup page', async function () {
           assert.notEqual(identicon, false, "main screen isn't opened")
         })
       })
+
       describe('Check output for data type : ADDRESS', () => {
+
         const address = '0x56B2e3C3cFf7f3921Dc2e0F8B8e20d1eEc29216b'
 
         it("Click button 'Execute method'", async function () {
@@ -537,6 +547,7 @@ describe('Metamask popup page', async function () {
           assert.notEqual(icon, false, 'icon copy isn\'t displayed')
           await icon.click()
         })
+
         it('Check clipboard buffer', async function () {
           const text = clipboardy.readSync()
           assert.equal(text.toLowerCase(), address.toLowerCase(), "output wasn't copied to clipboard")
@@ -588,17 +599,21 @@ describe('Metamask popup page', async function () {
           const text = await f.waitUntilHasValue(fields[1])
           assert.equal(text, stringValue, 'incorrect value was returned')
         })
+
         it('icon copy cliboard is displayed and clickable', async function () {
           const icon = await f.waitUntilShowUp(screens.executeMethod.copy)
           assert.notEqual(icon, false, 'icon copy isn\'t displayed')
           await icon.click()
         })
+
         it('Check clipboard buffer', async function () {
           const text = clipboardy.readSync()
           assert.equal(text.toLowerCase(), stringValue.toLowerCase(), "output wasn't copied to clipboard")
         })
       })
+
       describe('Check output for data type : BOOLEAN', () => {
+
         it("Select method 'returnBoolean'", async function () {
           const field = await f.waitUntilShowUp(screens.executeMethod.selectArrow)
           await field.click()
@@ -659,22 +674,25 @@ describe('Metamask popup page', async function () {
           const text = await f.waitUntilHasValue(fields[0])
           assert.equal(text, 'false', 'incorrect value was returned')
         })
+
         it('icon copy cliboard is displayed and clickable', async function () {
           const icon = await f.waitUntilShowUp(screens.executeMethod.copy)
           assert.notEqual(icon, false, 'icon copy isn\'t displayed')
           await icon.click()
         })
+
         it('Check clipboard buffer', async function () {
           const text = clipboardy.readSync()
           assert.equal(text.toLowerCase(), 'false', "output wasn't copied to clipboard")
         })
 
       })
+
       describe('Check output for data type : BYTES', () => {
 
         const bytesValue = '0x010203'
 
-   it("Select method 'returnBytes1'", async function () {
+        it("Select method 'returnBytes1'", async function () {
           const field = await f.waitUntilShowUp(screens.executeMethod.selectArrow)
           await field.click()
           await f.waitUntilShowUp(screens.executeMethod.items)
@@ -705,22 +723,24 @@ describe('Metamask popup page', async function () {
           const text = await f.waitUntilHasValue(fields[1])
           assert.equal(text, bytesValue, 'incorrect value was returned')
         })
+
         it('icon copy cliboard is displayed and clickable', async function () {
           const icon = await f.waitUntilShowUp(screens.executeMethod.copy)
           assert.notEqual(icon, false, 'icon copy isn\'t displayed')
           await icon.click()
         })
+
         it('Check clipboard buffer', async function () {
           const text = clipboardy.readSync()
           assert.equal(text.toLowerCase(), bytesValue.toLowerCase(), "output wasn't copied to clipboard")
         })
-
       })
+
       describe('Check output for data type : UINT256', () => {
 
         const uint256Value = '1122334455667788991122334455667788'
 
-   it("Select method 'returnUint256'", async function () {
+        it("Select method 'returnUint256'", async function () {
           const field = await f.waitUntilShowUp(screens.executeMethod.selectArrow)
           await field.click()
           await f.waitUntilShowUp(screens.executeMethod.items)
@@ -757,17 +777,18 @@ describe('Metamask popup page', async function () {
           assert.notEqual(icon, false, 'icon copy isn\'t displayed')
           await icon.click()
         })
+
         it('Check clipboard buffer', async function () {
           const text = clipboardy.readSync()
           assert.equal(text.toLowerCase(), uint256Value.toLowerCase(), "output wasn't copied to clipboard")
         })
-
       })
+
       describe('Check output for data type : INT256', () => {
 
         const int256Value = '-1122334455667788991122334455667788'
 
-       it("Select method 'returnInt256'", async function () {
+        it("Select method 'returnInt256'", async function () {
           const field = await f.waitUntilShowUp(screens.executeMethod.selectArrow)
           await field.click()
           await f.waitUntilShowUp(screens.executeMethod.items)
@@ -798,17 +819,19 @@ describe('Metamask popup page', async function () {
           const text = await f.waitUntilHasValue(fields[1])
           assert.equal(text, int256Value, 'incorrect value was returned')
         })
+
         it('icon copy cliboard is displayed and clickable', async function () {
           const icon = await f.waitUntilShowUp(screens.executeMethod.copy)
           assert.notEqual(icon, false, 'icon copy isn\'t displayed')
           await icon.click()
         })
+
         it('Check clipboard buffer', async function () {
           const text = clipboardy.readSync()
           assert.equal(text.toLowerCase(), int256Value.toLowerCase(), "output wasn't copied to clipboard")
         })
-
       })
+
       describe('Check executed method', () => {
 
         it("Select method 'transfer'", async function () {
@@ -910,8 +933,8 @@ describe('Metamask popup page', async function () {
           await button.click()
         })
       })
-
     })
+
     describe('Choose Contract Executor', () => {
 
       it('Title is displayed and correct', async function () {
@@ -967,7 +990,6 @@ describe('Metamask popup page', async function () {
         assert.equal(selected.length, 1, 'more than one accounts are selected')
       })
 
-
       it("Click button 'Next' open 'Confirm transaction' screen", async function () {
         const button = await f.waitUntilShowUp(screens.chooseContractExecutor.buttonNext)
         await button.click()
@@ -1000,7 +1022,7 @@ describe('Metamask popup page', async function () {
       })
 
       it("Button arrow leads to executor's account screen", async function () {
-        assert.equal(await f.executeTransferMethod(0,account1), true, "can't execute the method 'transfer'")
+        assert.equal(await f.executeTransferMethod(0, account1), true, "can't execute the method 'transfer'")
         await f.delay(2000)
         const arrow = await f.waitUntilShowUp(elements.buttonArrow)
         await arrow.click()
@@ -1009,7 +1031,7 @@ describe('Metamask popup page', async function () {
         assert.equal((await address.getText()).toUpperCase(), createdAccounts[0], "executors account isn't opened")
       })
 
-     it('Switch to contract account ', async function () {
+      it('Switch to contract account ', async function () {
         const accountMenu = await f.waitUntilShowUp(menus.account.menu)
         await accountMenu.click()
         const item = await f.waitUntilShowUp(menus.account.account4)
@@ -1020,7 +1042,7 @@ describe('Metamask popup page', async function () {
       })
 
       it("Confirm transaction: button 'Reject All' leads to contract's account screen", async function () {
-        assert.equal(await f.executeTransferMethod(0,account1), true, "can't execute the method 'transfer'")
+        assert.equal(await f.executeTransferMethod(0, account1), true, "can't execute the method 'transfer'")
         const rejectAll = await f.waitUntilShowUp(screens.confirmTransaction.button.rejectAll)
         assert.equal(await rejectAll.getText(), 'Reject All', 'button has incorrect name')
         await rejectAll.click()
@@ -1030,17 +1052,17 @@ describe('Metamask popup page', async function () {
       })
 
       it("Confirm transaction: button 'Submit' leads to contract's account screen", async function () {
-        assert.equal(await f.executeTransferMethod(2,account1), true, "can't execute the method 'transfer'")
+        assert.equal(await f.executeTransferMethod(2, account1), true, "can't execute the method 'transfer'")
         await f.delay(2000)
         const button = await f.waitUntilShowUp(screens.confirmTransaction.button.submit)
-        // assert.equal(await button.getText(), 'Submit', "button has incorrect name")
+        assert.equal(await button.getText(), 'Submit', 'button has incorrect name')
         await button.click()
         await f.delay(2000)
         const address = await f.waitUntilShowUp(screens.main.address)
         assert.equal((await address.getText()).toUpperCase(), contractSokol.toUpperCase(), "contract account isn't opened")
       })
 
-     it("Label 'CONTRACT' present", async function () {
+      it("Label 'CONTRACT' present", async function () {
         const menu = await f.waitUntilShowUp(menus.account.menu)
         await menu.click()
         await f.waitUntilShowUp(menus.account.label)
@@ -1114,62 +1136,69 @@ describe('Metamask popup page', async function () {
   })
 
   describe('Sign Data', () => {
+    let isSignRequestCreated
     it('Simulate sign request ', async function () {
       await f.delay(5000)
       await f.setProvider(NETWORKS.LOCALHOST)
-      await driver.get('https://danfinlay.github.io/js-eth-personal-sign-examples/')
-      const button = await f.waitUntilShowUp(By.id('ethSignButton'))
-      await button.click()
-    })
-
-    it('navigates back to MetaMask popup in the tab', async function () {
-      if (process.env.SELENIUM_BROWSER === 'chrome') {
-        await driver.get(`chrome-extension://${extensionId}/popup.html`)
-      } else if (process.env.SELENIUM_BROWSER === 'firefox') {
-        await driver.get(`moz-extension://${extensionId}/popup.html`)
+      try {
+        await driver.get('https://danfinlay.github.io/js-eth-personal-sign-examples/')
+        const button = await f.waitUntilShowUp(By.id('ethSignButton'))
+        await button.click()
+        isSignRequestCreated = true
+      } catch (err) {
+        console.log("SIGN REQUEST WASN'T CREATED. TESTS HAVEN'T BEEN EXECUTED!!!!!!!")
       }
-      await f.delay(700)
     })
+    if (isSignRequestCreated) {
+      it('navigates back to MetaMask popup in the tab', async function () {
+        if (process.env.SELENIUM_BROWSER === 'chrome') {
+          await driver.get(`chrome-extension://${extensionId}/popup.html`)
+        } else if (process.env.SELENIUM_BROWSER === 'firefox') {
+          await driver.get(`moz-extension://${extensionId}/popup.html`)
+        }
+        await f.delay(700)
+      })
 
-    it('error message is displayed and contains text', async function () {
-      const error = await f.waitUntilShowUp(screens.signMessage.error)
-      assert.notEqual(error, false, 'error message isn\'t displayed')
-      const text = await error.getText()
-      assert.equal(text.length > 183, true, 'error message hasn\'t text')
-    })
+      it('error message is displayed and contains text', async function () {
+        const error = await f.waitUntilShowUp(screens.signMessage.error)
+        assert.notEqual(error, false, 'error message isn\'t displayed')
+        const text = await error.getText()
+        assert.equal(text.length > 183, true, 'error message hasn\'t text')
+      })
 
-    it('account name is displayed and correct', async function () {
-      const name = await f.waitUntilShowUp(screens.signMessage.accountName)
-      assert.notEqual(name, false, 'account name isn\'t displayed')
-      assert.equal(await name.getText(), 'new name', 'account name is incorrect')
-    })
+      it('account name is displayed and correct', async function () {
+        const name = await f.waitUntilShowUp(screens.signMessage.accountName)
+        assert.notEqual(name, false, 'account name isn\'t displayed')
+        assert.equal(await name.getText(), 'new name', 'account name is incorrect')
+      })
 
-    it('title is displayed and correct', async function () {
-      const title = await f.waitUntilShowUp(screens.signMessage.title)
-      assert.notEqual(title, false, 'title isn\'t displayed')
-      assert.equal(await title.getText(), 'Sign message', 'title is incorrect')
-    })
+      it('title is displayed and correct', async function () {
+        const title = await f.waitUntilShowUp(screens.signMessage.title)
+        assert.notEqual(title, false, 'title isn\'t displayed')
+        assert.equal(await title.getText(), 'Sign message', 'title is incorrect')
+      })
 
-    it('message is displayed and correct', async function () {
-      const message = await f.waitUntilShowUp(screens.signMessage.message)
-      assert.notEqual(message, false, 'message isn\'t displayed')
-      assert.equal((await message.getText()).length > 32, true, 'message is incorrect')
-    })
+      it('message is displayed and correct', async function () {
+        const message = await f.waitUntilShowUp(screens.signMessage.message)
+        assert.notEqual(message, false, 'message isn\'t displayed')
+        assert.equal((await message.getText()).length > 32, true, 'message is incorrect')
+      })
 
-    it('button \'Cancel\' is enabled and lead to main screen ', async function () {
-      const button = await f.waitUntilShowUp(screens.signMessage.buttons.cancel)
-      assert.equal(await button.isEnabled(), true, 'button isn\'t enabled')
-      assert.equal(await button.getText(), 'Cancel', 'button has incorrect name')
-    })
+      it('button \'Cancel\' is enabled and lead to main screen ', async function () {
+        const button = await f.waitUntilShowUp(screens.signMessage.buttons.cancel)
+        assert.equal(await button.isEnabled(), true, 'button isn\'t enabled')
+        assert.equal(await button.getText(), 'Cancel', 'button has incorrect name')
+      })
 
-    it('button \'Sign\' is enabled and lead to main screen ', async function () {
-      const button = await f.waitUntilShowUp(screens.signMessage.buttons.sign)
-      assert.equal(await button.isEnabled(), true, 'button isn\'t enabled')
-      assert.equal(await button.getText(), 'Sign', 'button has incorrect name')
-      await f.click(button)
-      const identicon = await f.waitUntilShowUp(screens.main.identicon)
-      assert.notEqual(identicon, false, 'main screen didn\'t opened')
-    })
+      it('button \'Sign\' is enabled and lead to main screen ', async function () {
+        const button = await f.waitUntilShowUp(screens.signMessage.buttons.sign)
+        assert.equal(await button.isEnabled(), true, 'button isn\'t enabled')
+        assert.equal(await button.getText(), 'Sign', 'button has incorrect name')
+        await f.click(button)
+        const identicon = await f.waitUntilShowUp(screens.main.identicon)
+        assert.notEqual(identicon, false, 'main screen didn\'t opened')
+      })
+    }
   })
 
   describe('Export private key', async () => {
@@ -1404,10 +1433,12 @@ describe('Metamask popup page', async function () {
         const addTokenScreen = await f.waitUntilShowUp(screens.addToken.title)
         assert.equal(await addTokenScreen.getText(), screens.addToken.titleText)
       })
+
       it('adds token parameters', async function () {
         const tab = await f.waitUntilShowUp(screens.addToken.tab.custom, 30)
         if (!await f.waitUntilShowUp(screens.addToken.custom.fields.contractAddress)) await tab.click()
       })
+
       it('address input is displayed and has correct placeholder', async function () {
         const field = await f.waitUntilShowUp(screens.addToken.custom.fields.contractAddress)
         assert.equal(await field.getAttribute('placeholder'), 'Token Contract Address', 'incorrect placeholder')
@@ -1454,6 +1485,7 @@ describe('Metamask popup page', async function () {
         await f.switchToFirstPage()
       })
     })
+
     describe('Token menu', function () {
 
       it('token menu is displayed and clickable ', async function () {
@@ -1504,7 +1536,6 @@ describe('Metamask popup page', async function () {
         await f.waitUntilShowUp(menus.token.menu)
       })
     })
-
 
     describe('Check support of token per network basis ', async function () {
       const inexistentToken = '0xB8c77482e45F1F44dE1745F52C74426C631bDD51'
@@ -1596,6 +1627,7 @@ describe('Metamask popup page', async function () {
       const largeAmount = '123'
       const preciseAmount = '0.123456789123456789123'
       const negativeAmount = '-1'
+
       it('switch to account 1 ', async function () {
         const accountMenu = await f.waitUntilShowUp(menus.account.menu)
         await accountMenu.click()
@@ -1679,6 +1711,7 @@ describe('Metamask popup page', async function () {
         const error = await f.waitUntilShowUp(screens.sendTokens.error)
         assert.equal(await error.getText(), screens.sendTokens.errorText.invalidAmount, ' error message is incorrect')
       })
+
       it.skip('error message if amount is too precise', async function () {
         const amount = await f.waitUntilShowUp(screens.sendTokens.field.amount)
         await f.clearField(amount)
@@ -1744,6 +1777,7 @@ describe('Metamask popup page', async function () {
         const balance = await f.waitUntilShowUp(screens.main.tokens.balance)
         assert.equal(await balance.getText(), (token.supply - 5) + ' ' + token.ticker, 'balance is incorrect')
       })
+
       it('switch to account 2 ', async function () {
         const accountMenu = await f.waitUntilShowUp(menus.account.menu)
         await accountMenu.click()
@@ -1779,7 +1813,9 @@ describe('Metamask popup page', async function () {
         assert.equal(await balance.getText(), '5 ' + token.ticker, 'balance is incorrect')
       })
     })
+
     describe('Remove token , provider is localhost', function () {
+
       it('switch to account 1 ', async function () {
         const accountMenu = await f.waitUntilShowUp(menus.account.menu)
         await accountMenu.click()
@@ -1865,6 +1901,7 @@ describe('Metamask popup page', async function () {
         assert.equal(await f.assertTokensNotDisplayed(), true, 'tokens are displayed')
       })
     })
+
   })
 
   describe('Change password', async () => {
@@ -2470,8 +2507,6 @@ describe('Metamask popup page', async function () {
       await menu.click()
     })
   })
-
-
 })
 
 

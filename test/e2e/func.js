@@ -1,7 +1,6 @@
 require('chromedriver')
 require('geckodriver')
 const Web3 = require('web3')
-const mkdirp = require('mkdirp')
 const fs = require('fs-extra')
 const os = require('os')
 const path = require('path')
@@ -11,18 +10,18 @@ const webdriver = require('selenium-webdriver')
 const Command = require('selenium-webdriver/lib/command').Command
 const assert = require('assert')
 const { By, Key } = webdriver
-const { menus, screens, elements, NETWORKS } = require('./elements')
+const { screens, elements, NETWORKS } = require('./elements')
 
 class Functions {
-  constructor(driver){
+  constructor (driver) {
     this.driver = driver
   }
 
-  async delay(time) {
+  async delay (time) {
    return new Promise(resolve => setTimeout(resolve, time))
   }
 
-  async createModifiedTestBuild({ browser, srcPath }) {
+  async createModifiedTestBuild ({ browser, srcPath }) {
     // copy build to test-builds directory
     const extPath = path.resolve(`test-builds/${browser}`)
     await fs.ensureDir(extPath)
@@ -33,14 +32,14 @@ class Functions {
     return { extPath }
   }
 
-  static async setupBrowserAndExtension({ browser, extPath }) {
+  static async setupBrowserAndExtension ({ browser, extPath }) {
     let driver, extensionId, extensionUri
-    if ( browser === 'chrome' ) {
+    if (browser === 'chrome') {
       driver = this.buildChromeWebDriver(extPath)
       this.driver = driver
       extensionId = await this.getExtensionIdChrome()
       extensionUri = `chrome-extension://${extensionId}/home.html`
-    } else if ( browser === 'firefox' ) {
+    } else if (browser === 'firefox') {
       driver = this.buildFirefoxWebdriver()
       this.driver = driver
       await this.installWebExt(extPath)
@@ -54,7 +53,7 @@ class Functions {
     return { driver, extensionId, extensionUri }
   }
 
-  static async buildChromeWebDriver(extPath) {
+  static async buildChromeWebDriver (extPath) {
     const tmpProfile = fs.mkdtempSync(path.join(os.tmpdir(), 'mm-chrome-profile'))
     return new webdriver.Builder()
       .withCapabilities({
@@ -69,23 +68,23 @@ class Functions {
       .build()
   }
 
-  static async buildFirefoxWebdriver() {
+  static async buildFirefoxWebdriver () {
     return new webdriver.Builder().build()
   }
 
-  async getExtensionIdChrome() {
+  async getExtensionIdChrome () {
     await this.driver.get('chrome://extensions')
     const extensionId = await this.driver.executeScript('return document.querySelector("extensions-manager").shadowRoot.querySelector("cr-view-manager extensions-item-list").shadowRoot.querySelector("extensions-item:nth-child(2)").getAttribute("id")')
     return extensionId
   }
 
-  async getExtensionIdFirefox() {
+  async getExtensionIdFirefox () {
     await this.driver.get('about:debugging#addons')
     const extensionId = await this.driver.findElement(By.css('dd.addon-target-info-content:nth-child(6) > span:nth-child(1)')).getText()
     return extensionId
   }
 
-  async installWebExt(extension) {
+  async installWebExt (extension) {
     const cmd = await new Command('moz-install-web-ext')
       .setParameter('path', path.resolve(extension))
       .setParameter('temporary', true)
@@ -96,22 +95,22 @@ class Functions {
     return await this.driver.execute(cmd, 'installWebExt(' + extension + ')')
   }
 
-  async verboseReportOnFailure({ browser, title }) {
+  async verboseReportOnFailure ({ browser, title }) {
     const artifactDir = `./test-artifacts/${browser}/${title}`
     const filepathBase = `${artifactDir}/test-failure`
     await fs.ensureDir(artifactDir)
     const screenshot = await this.driver.takeScreenshot()
     await fs.writeFile(`${filepathBase}-screenshot.png`, screenshot, { encoding: 'base64' })
-    const htmlSource = await driver.getPageSource()
+    const htmlSource = await this.driver.getPageSource()
     await fs.writeFile(`${filepathBase}-dom.html`, htmlSource)
   }
 
-  async setProvider(network) {
+  async setProvider (network) {
     await this.delay(300)
     const menu = await this.waitUntilShowUp(screens.main.network)
     await menu.click()
     let counter
-    switch ( network ) {
+    switch (network) {
       case NETWORKS.POA:
         counter = 0
         break
@@ -145,77 +144,77 @@ class Functions {
     await this.driver.executeScript("document.getElementsByClassName('dropdown-menu-item')[" + counter + '].click();')
   }
 
-  async scrollTo(element) {
+  async scrollTo (element) {
     try {
       await this.driver.executeScript('arguments[0].scrollIntoView();', element)
       return true
-    } catch ( err ) {
+    } catch (err) {
       return false
     }
   }
 
-  async click(element) {
+  async click (element) {
     try {
       await element.sendKeys(Key.RETURN)
       return true
-    } catch ( err ) {
+    } catch (err) {
       return false
     }
   }
 
-  async clearField(field, number) {
+  async clearField (field, number) {
     await this.click(field)
-    if ( number === undefined ) number = 40
-    for ( let i = 0; i < number; i++ ) {
+    if (number === undefined) number = 40
+    for (let i = 0; i < number; i++) {
       await field.sendKeys(Key.BACK_SPACE)
     }
   }
 
-  async waitUntilDisappear(by, Twait) {
-   if ( Twait === undefined ) Twait = 10
+  async waitUntilDisappear (by, Twait) {
+   if (Twait === undefined) Twait = 10
     do {
-      if ( !await this.isElementDisplayed(by) ) return true
+      if (!await this.isElementDisplayed(by)) return true
 
-    } while ( Twait-- > 0 )
+    } while (Twait-- > 0)
     return false
   }
 
-  async waitUntilShowUp(by, Twait) {
-     if ( Twait === undefined ) Twait = 200
+  async waitUntilShowUp (by, Twait) {
+     if (Twait === undefined) Twait = 200
      do {
       await this.delay(100)
-      if ( await this.isElementDisplayed(by) ) return await this.driver.findElement(by)
-    } while ( Twait-- > 0 )
+      if (await this.isElementDisplayed(by)) return await this.driver.findElement(by)
+    } while (Twait-- > 0)
     return false
   }
 
-  async waitUntilHasValue(element, Twait) {
-    if ( Twait === undefined ) Twait = 200
+  async waitUntilHasValue (element, Twait) {
+    if (Twait === undefined) Twait = 200
     let text
     do {
       await this.delay(100)
       text = await element.getAttribute('value')
-      if ( text !== '' ) return text
-    } while ( Twait-- > 0 )
+      if (text !== '') return text
+    } while (Twait-- > 0)
     return false
   }
 
-  async isElementDisplayed(by) {
+  async isElementDisplayed (by) {
     try {
       return await this.driver.findElement(by).isDisplayed()
-    } catch ( err ) {
+    } catch (err) {
       return false
     }
   }
 
-  async assertTokensNotDisplayed() {
+  async assertTokensNotDisplayed () {
     try {
       await this.delay(800)
       await this.waitUntilDisappear(elements.loader)
       assert.notEqual(await this.waitUntilShowUp(screens.main.tokens.amount), false, 'App is frozen')
       // Check tokens title
       let locator = screens.main.tokens.counter
-      if ( process.env.SELENIUM_BROWSER === 'firefox' ) locator = screens.main.tokens.counterFF
+      if (process.env.SELENIUM_BROWSER === 'firefox') locator = screens.main.tokens.counterFF
       const tokensCounter = await this.waitUntilShowUp(locator)
       assert.notEqual(tokensCounter, false, '\'Token\'s counter isn\'t displayed ')
       assert.equal(await tokensCounter.getText(), screens.main.tokens.textNoTokens, 'Unexpected token presents')
@@ -223,13 +222,13 @@ class Functions {
       const tokens = await this.driver.findElements(screens.main.tokens.token)
       assert.equal(tokens.length, 0, 'Unexpected token presents')
       return true
-    } catch ( err ) {
+    } catch (err) {
       console.log(err)
       return false
     }
   }
 
-  async isDisabledAddInexistentToken(tokenAddress) {
+  async isDisabledAddInexistentToken (tokenAddress) {
     await this.delay(500)
     try {
       const tab = await this.waitUntilShowUp(screens.main.tokens.menu)
@@ -242,29 +241,29 @@ class Functions {
         const tab = await this.waitUntilShowUp(screens.addToken.tab.custom, 10)
         try {
           await tab.click()
-        } catch ( err ) {
+        } catch (err) {
         }
       }
-      while ( (await this.waitUntilShowUp(screens.addToken.custom.fields.contractAddress) === false) && (count-- > 0) )
-    } catch ( err ) {
+      while ((await this.waitUntilShowUp(screens.addToken.custom.fields.contractAddress) === false) && (count-- > 0))
+    } catch (err) {
     }
     const fieldAddress = await this.waitUntilShowUp(screens.addToken.custom.fields.contractAddress)
     await this.clearField(fieldAddress)
     await fieldAddress.sendKeys(tokenAddress)
 
     const fieldSymbols = await this.waitUntilShowUp(screens.addToken.custom.fields.tokenSymbol)
-    if ( await fieldSymbols.isEnabled() ) {
+    if (await fieldSymbols.isEnabled()) {
       console.log('field symbols enabled')
       return false
     }
 
     const fieldDecimals = await this.waitUntilShowUp(screens.addToken.custom.fields.tokenSymbol)
-    if ( await fieldDecimals.isEnabled() ) {
+    if (await fieldDecimals.isEnabled()) {
       console.log('field decimals enabled')
       return false
     }
     const buttonAdd = await this.waitUntilShowUp(screens.addToken.custom.buttons.add)
-    if ( await buttonAdd.isEnabled() ) {
+    if (await buttonAdd.isEnabled()) {
       console.log('button add enabled')
       return false
     }
@@ -274,15 +273,15 @@ class Functions {
       await this.delay(500)
       await this.click(buttonCancel)
     }
-    while ( ((await this.waitUntilShowUp(screens.main.identicon)) === false) && (counter-- > 0) )
-    if ( counter < 1 ) {
+    while (((await this.waitUntilShowUp(screens.main.identicon)) === false) && (counter-- > 0))
+    if (counter < 1) {
       console.log('button cancel doesn\'t work')
       return false
     }
     return true
   }
 
-  async checkBrowserForConsoleErrors(driver) {
+  async checkBrowserForConsoleErrors (driver) {
     const ignoredLogTypes = ['WARNING']
     const ignoredErrorMessages = [
       // React throws error warnings on "dataset", but still sets the data-* properties correctly
@@ -302,40 +301,23 @@ class Functions {
     return matchedErrorObjects
   }
 
-  async verboseReportOnFailure(test) {
-    let artifactDir
-    if ( process.env.SELENIUM_BROWSER === 'chrome' ) {
-      artifactDir = `./test-artifacts/chrome/${test.title}`
-    } else if ( process.env.SELENIUM_BROWSER === 'firefox' ) {
-      artifactDir = `./test-artifacts/firefox/${test.title}`
-    }
-    const filepathBase = `${artifactDir}/test-failure`
-    await pify(mkdirp)(artifactDir)
-    // capture screenshot
-    const screenshot = await this.driver.takeScreenshot()
-    await pify(fs.writeFile)(`${filepathBase}-screenshot.png`, screenshot, { encoding: 'base64' })
-    // capture dom source
-    const htmlSource = await this.driver.getPageSource()
-    await pify(fs.writeFile)(`${filepathBase}-dom.html`, htmlSource)
-  }
-
-  async switchToLastPage() {
+  async switchToLastPage () {
     try {
       const allHandles = await this.driver.getAllWindowHandles()
       await this.driver.switchTo().window(allHandles[allHandles.length - 1])
       let counter = 100
       do {
         await this.delay(500)
-        if ( await this.driver.getCurrentUrl() !== '' ) return true
+        if (await this.driver.getCurrentUrl() !== '') return true
       }
-      while ( counter-- > 0 )
+      while (counter-- > 0)
       return true
-    } catch ( err ) {
+    } catch (err) {
       return false
     }
   }
 
-  async switchToFirstPage() {
+  async switchToFirstPage () {
     try {
       const allHandles = await this.driver.getAllWindowHandles()
       console.log('allHandles.length ' + allHandles.length)
@@ -343,32 +325,32 @@ class Functions {
       let counter = 100
       do {
         await this.delay(500)
-        if ( await this.driver.getCurrentUrl() !== '' ) return true
+        if (await this.driver.getCurrentUrl() !== '') return true
       }
-      while ( counter-- > 0 )
+      while (counter-- > 0)
       return true
-    } catch ( err ) {
+    } catch (err) {
       return false
     }
   }
 
-  async waitUntilCurrentUrl() {
+  async waitUntilCurrentUrl () {
     try {
       let title
       let counter = 20
       do {
         await this.delay(500)
         title = await this.driver.getCurrentUrl()
-      } while ( (title === '') && (counter-- > 0) )
-      if ( counter < 1 ) return false
+      } while ((title === '') && (counter-- > 0))
+      if (counter < 1) return false
       return title
-    } catch ( err ) {
+    } catch (err) {
       console.log(err)
       return false
     }
   }
 
-  async createToken(owner, { supply, name, decimals, ticker }, isDelayed) {
+  async createToken (owner, { supply, name, decimals, ticker }, isDelayed) {
 
     const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545/'))
     const abi = [
@@ -657,17 +639,17 @@ class Functions {
 
     const tokenContract = web3.eth.contract(abi)
     const contractInstance = await tokenContract.new(supply, name, decimals, ticker, {
-      data: bin, from: owner, gas: 4500000, function(err, tokenContract) {
-        if ( err ) {
+      data: bin, from: owner, gas: 4500000, function (err, tokenContract) {
+        if (err) {
           console.log('Error of token creation: ' + err)
         }
       },
     })
-    if ( isDelayed ) await this.delay(5000)
+    if (isDelayed) await this.delay(5000)
     return contractInstance.address
   }
 
-  async executeTransferMethod(executor,address) {
+  async executeTransferMethod (executor, address) {
     try {
       const buttonExecute = await this.waitUntilShowUp(screens.executeMethod.buttonExecuteMethod)
       assert.notEqual(buttonExecute, false, "button doesn't displayed")
@@ -700,10 +682,10 @@ class Functions {
       const button = await this.waitUntilShowUp(screens.chooseContractExecutor.buttonNext)
       await button.click()
       return true
-    } catch ( err ) {
+    } catch (err) {
       return false
     }
   }
 }
-module.exports.Functions = Functions;
+module.exports.Functions = Functions
 
