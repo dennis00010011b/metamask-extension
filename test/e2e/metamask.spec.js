@@ -12,8 +12,7 @@ const createdAccounts = []
 const eventsEmitter = 'https://vbaranov.github.io/event-listener-dapp/'
 
 describe('Metamask popup page', async function () {
-
-  this.timeout(0)
+  this.timeout(20000)
 
   const f = new Func()
   let driver, tokenAddress, extensionId
