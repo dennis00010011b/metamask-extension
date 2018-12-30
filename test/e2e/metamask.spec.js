@@ -1143,7 +1143,9 @@ describe('Metamask popup page', async function () {
       await f.setProvider(NETWORKS.LOCALHOST)
       await driver.get('https://danfinlay.github.io/js-eth-personal-sign-examples/')
       const button = await f.waitUntilShowUp(By.id('ethSignButton'))
+      assert.notEqual(button,false,"resource isn't responding")
       await button.click()
+      await f.delay(5000)
     })
 
     it('navigates back to MetaMask popup in the tab', async function () {
