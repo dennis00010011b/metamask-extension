@@ -13,7 +13,7 @@ const eventsEmitter = 'https://vbaranov.github.io/event-listener-dapp/'
 
 describe('Metamask popup page', async function () {
 
-  this.timeout(20000)
+  this.timeout(15*60*1000)
 
   const f = new Func()
   let driver, tokenAddress, extensionId
